@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { useAppContext } from '@/context/AppContext';
 import ProductCard from '@/components/ProductCard';
 import ProductCardSkeleton from '@/components/ProductCardSkeleton';
+import WhomWeServe from '@/components/new/WhomWeServe';
 
 // Hero slides
 const slides = [
@@ -327,7 +328,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-center mb-12 tracking-tight">
             Featured Products
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {loading ? (
               // Show skeleton loaders while loading
               Array.from({ length: 4 }).map((_, index) => (
@@ -355,7 +356,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-center mb-12 tracking-tight">
             New Arrivals
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {loading ? (
               // Show skeleton loaders while loading
               Array.from({ length: 4 }).map((_, index) => (
@@ -376,6 +377,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Whom We Serve Section */}
+<WhomWeServe/>
 
       {/* About Teaser */}
       <section className="py-24 bg-white">

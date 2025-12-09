@@ -12,6 +12,7 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import Logo from "./new/regalLogo.png";  
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -262,37 +263,45 @@ function DesktopHeaderTopRow({
   return (
     <div className="hidden lg:block">
       {/* Top row: Logo - Center Search - Wishlist */}
-      <div className="flex items-center justify-between gap-6 py-4">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="text-3xl font-semibold tracking-[0.3em] text-secondary font-serif uppercase transition-transform duration-200 hover:-translate-y-[1px]"
-        >
-          REGAL
-        </Link>
+      <div className="flex items-center justify-between gap-3 sm:gap-6 py-3 sm:py-4 flex-wrap md:flex-nowrap">
+  {/* Logo */}
+  <Link
+    href="/"
+    className="shrink-0 flex items-center"
+  >
+    <Image
+      src={Logo}
+      alt="REGAL"
+      width={170}
+      height={100}
+      priority
+      className="h-7 w-auto sm:h-8 md:h-10 lg:h-12 object-contain"
+    />
+  </Link>
 
-        {/* Centered Search */}
-        <div className="flex-1 flex justify-center">
-          <div className="w-full max-w-xl">
-            <SearchBar />
-          </div>
-        </div>
+  {/* Centered Search */}
+  <div className="flex-1 flex justify-center order-3 w-full mt-3 md:mt-0 md:order-none">
+    <div className="w-full max-w-xl">
+      <SearchBar />
+    </div>
+  </div>
 
-        {/* Wishlist as Cart */}
-        <div className="flex items-center gap-4">
-          <Link
-            href="/wishlist"
-            className="relative text-secondary hover:text-primary transition-colors"
-          >
-            <HeartIcon className="w-6 h-6" />
-            {wishlist.length > 0 && (
-              <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-sm">
-                {wishlist.length}
-              </span>
-            )}
-          </Link>
-        </div>
-      </div>
+  {/* Wishlist as Cart */}
+  <div className="flex items-center gap-4 order-2 md:order-none">
+    <Link
+      href="/wishlist"
+      className="relative text-secondary hover:text-primary transition-colors"
+    >
+      <HeartIcon className="w-6 h-6" />
+      {wishlist.length > 0 && (
+        <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-sm">
+          {wishlist.length}
+        </span>
+      )}
+    </Link>
+  </div>
+</div>
+
 
       {/* Nav row: Home / Products / We Serve */}
      

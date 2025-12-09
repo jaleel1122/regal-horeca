@@ -8,6 +8,10 @@ const nextConfig = {
     // Allow images from Cloudflare R2 and other external sources
     remotePatterns: [
       {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
         protocol: 'https',
         hostname: '**.r2.cloudflarestorage.com',
       },
