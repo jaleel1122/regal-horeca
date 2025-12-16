@@ -469,6 +469,7 @@ export default function CategoryPage() {
         </div>
       </section>
 
+
       {/* Partners Section */}
       <section className="py-16 md:py-24 bg-[#F5F5F5]">
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12">
