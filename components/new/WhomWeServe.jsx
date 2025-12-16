@@ -53,7 +53,7 @@ export default function OurCategories() {
           {categories.slice(0, 4).map((cat) => (
           <Link
             key={cat.slug}
-            href={`/enquiry?category=${cat.title}`}
+            href={`/whom-we-serve/${cat.slug}`}
               className="relative group overflow-hidden transform-gpu w-full h-[400px] sm:h-[350px] lg:h-[450px]
                 shadow-sm hover:shadow-xl hover:shadow-black/20
                 transition-all duration-300 ease-out
@@ -95,7 +95,7 @@ export default function OurCategories() {
           {categories.slice(4, 6).map((cat) => (
             <Link
               key={cat.slug}
-              href={`/enquiry?category=${cat.title}`}
+              href={`/whom-we-serve/${cat.slug}`}
               className="relative group overflow-hidden transform-gpu w-full h-[400px] sm:h-[350px] lg:h-[450px]
                 shadow-sm hover:shadow-xl hover:shadow-black/20
                 transition-all duration-300 ease-out

@@ -2,11 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Montserrat font */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
 /* Global styles for the application */
+html {
+  scroll-behavior: smooth;
+}
+
 html, body {
-  @apply bg-white text-secondary font-sans;
+  @apply bg-white text-black font-sans;
   overflow-x: hidden;
   max-width: 100%;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Custom scrollbar styles */
@@ -16,15 +24,15 @@ html, body {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  @apply bg-white;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 rounded;
+  @apply bg-black/20 rounded;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
+  @apply bg-black/40;
 }
 
 /* Custom animations for product page */

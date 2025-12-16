@@ -53,7 +53,7 @@ export default function Header() {
   const departmentMenuRefs = useRef({});
 
   const navLinkClass =
-    "text-sm font-medium tracking-[0.25em] uppercase text-secondary hover:text-primary transition-colors";
+    "text-sm font-medium tracking-[0.25em] uppercase text-black hover:text-accent transition-colors";
 
   // ---------- Category tree building ----------
   const buildCategoryTree = (parentId = null) => {
@@ -315,23 +315,23 @@ function DesktopHeaderTopRow({
   <div className="flex items-center gap-4 order-2 md:order-none">
     <Link
       href="/wishlist"
-      className="relative text-secondary hover:text-primary transition-colors"
+      className="relative text-black hover:text-accent transition-colors"
     >
       <HeartIcon className="w-6 h-6" />
       {wishlist.length > 0 && (
-        <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-sm">
+        <span className="absolute -top-1 -right-2 bg-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-sm">
           {wishlist.length}
         </span>
       )}
     </Link>
     <button
       onClick={onCartClick}
-      className="relative text-secondary hover:text-primary transition-colors"
+      className="relative text-black hover:text-accent transition-colors"
       aria-label="Open cart"
     >
       <ShoppingCartIcon className="w-6 h-6" />
       {cartTotalItems > 0 && (
-        <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-sm">
+        <span className="absolute -top-1 -right-2 bg-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-sm">
           {cartTotalItems}
         </span>
       )}
@@ -389,7 +389,7 @@ function DesktopHeaderTopRow({
   
     return (
       <div className="hidden lg:block">
-        <hr className="absolute left-0 w-full border-gray-400" />
+        <hr className="absolute left-0 w-full border-black/20" />
   
         <div
           className="relative w-full mx-auto "
@@ -411,15 +411,15 @@ function DesktopHeaderTopRow({
                   >
                     <Link
                       href={`/catalog?category=${dept.slug}`}
-                      className="text-md font-medium text-gray-900 hover:text-primary whitespace-nowrap transition-colors duration-300 ease-out flex items-center gap-1.5 group py-3 relative"
+                      className="text-md font-medium text-black hover:text-accent whitespace-nowrap transition-colors duration-300 ease-out flex items-center gap-1.5 group py-3 relative"
                     >
                       <span className="relative inline-block">
                         {dept.name}
                         {!isActive && (
-                          <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-primary transition-all duration-300 ease-out group-hover:w-full group-hover:left-1/2 group-hover:-translate-x-1/2"></span>
+                          <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-accent transition-all duration-300 ease-out group-hover:w-full group-hover:left-1/2 group-hover:-translate-x-1/2"></span>
                         )}
                         {isActive && (
-                          <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary"></span>
+                          <span className="absolute bottom-0 left-0 w-full h-0.5 bg-accent"></span>
                         )}
                       </span>
                       {hasChildren && (
@@ -434,12 +434,12 @@ function DesktopHeaderTopRow({
                 );
               })}
               <Link
-                href="/aboutus"
-                className="text-md font-medium text-gray-900 hover:text-primary whitespace-nowrap transition-colors duration-300 ease-out py-3 relative group"
+                href="/about"
+                className="text-md font-medium text-black hover:text-accent whitespace-nowrap transition-colors duration-300 ease-out py-3 relative group"
               >
                 <span className="relative inline-block">
                   About Us
-                  <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-primary transition-all duration-300 ease-out group-hover:w-full group-hover:left-1/2 group-hover:-translate-x-1/2"></span>
+                  <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-accent transition-all duration-300 ease-out group-hover:w-full group-hover:left-1/2 group-hover:-translate-x-1/2"></span>
                 </span>
               </Link>
             </div>
@@ -454,7 +454,7 @@ function DesktopHeaderTopRow({
               z-40
               bg-white
               shadow-[0_18px_45px_rgba(15,23,42,0.18)]
-              border border-gray-200 rounded-b-2xl
+              border border-black/10 rounded-b-2xl
               overflow-hidden
               transform-gpu
               transition-all duration-700 md:duration-1000 ease-out
@@ -478,7 +478,7 @@ function DesktopHeaderTopRow({
                       >
                         <Link
                           href={`/catalog?category=${childCat.slug}`}
-                          className="block text-sm font-semibold uppercase tracking-wide text-gray-900 border-b border-gray-200 pb-2 mb-3 hover:text-primary transition-colors duration-500 ease-out"
+                          className="block text-sm font-semibold uppercase tracking-wide text-black border-b border-black/10 pb-2 mb-3 hover:text-accent transition-colors duration-500 ease-out"
                         >
                           {childCat.name}
                         </Link>
@@ -492,7 +492,7 @@ function DesktopHeaderTopRow({
                               >
                                 <Link
                                   href={`/catalog?category=${subcat.slug}`}
-                                  className="text-sm text-gray-600 hover:text-primary transition-colors duration-400 ease-out"
+                                  className="text-sm text-black/70 hover:text-accent transition-colors duration-400 ease-out"
                                 >
                                   {subcat.name}
                                 </Link>
@@ -505,7 +505,7 @@ function DesktopHeaderTopRow({
                   </div>
   
                   {/* Featured Products Section */}
-                  <div className="w-full lg:w-[32%] border-t lg:border-t-0 lg:border-l border-gray-200 pt-6 lg:pt-0 lg:pl-6 transition-opacity duration-700 md:duration-1000 ease-out">
+                  <div className="w-full lg:w-[32%] border-t lg:border-t-0 lg:border-l border-black/10 pt-6 lg:pt-0 lg:pl-6 transition-opacity duration-700 md:duration-1000 ease-out">
                     <FeaturedProductsSection
                       department={activeDept}
                       products={products}
@@ -516,7 +516,7 @@ function DesktopHeaderTopRow({
             )}
           </div>
         </div>
-        <hr className="absolute left-0 w-full border-gray-400" />
+        <hr className="absolute left-0 w-full border-black/20" />
       </div>
     );
   }
@@ -574,10 +574,10 @@ function DesktopHeaderTopRow({
   
     return (
       <div className="w-full lg:w-auto lg:min-w-[460px] lg:max-w-[420px]">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900 mb-4">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-black mb-4">
           Featured
         </h3>
-  
+
         {/* Use a responsive grid so cards don't force horizontal overflow */}
         <div className="grid grid-cols-2 gap-3 lg:gap-4 w-full items-start">
           {featuredProducts.map((product) => {
@@ -593,12 +593,12 @@ function DesktopHeaderTopRow({
                 <div className="relative mb-2">
                   {/* Sale Badge */}
                   {isOnSale && (
-                    <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+                    <div className="absolute top-2 left-2 z-10 bg-accent text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
                       Sale
                     </div>
                   )}
                   {/* Product Image */}
-                  <div className="aspect-square bg-gray-100 rounded overflow-hidden relative">
+                  <div className="aspect-square bg-white border border-black/10 rounded overflow-hidden relative">
                     <Image
                       src={heroImage}
                       alt={product.title || product.name}
@@ -609,16 +609,16 @@ function DesktopHeaderTopRow({
                   </div>
                 </div>
                 {/* Product Name */}
-                <h4 className="text-xs font-medium text-gray-900 mb-1.5 line-clamp-2 group-hover:text-primary transition-colors leading-snug min-w-0">
+                <h4 className="text-xs font-medium text-black mb-1.5 line-clamp-2 group-hover:text-accent transition-colors leading-snug min-w-0">
                   {product.title || product.name}
                 </h4>
                 {/* Price */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs sm:text-sm font-semibold text-red-600">
+                  <span className="text-xs sm:text-sm font-semibold text-accent">
                     {formatPrice(product.price)}
                   </span>
                   {isOnSale && (
-                    <span className="text-[10px] sm:text-xs text-gray-500 line-through">
+                    <span className="text-[10px] sm:text-xs text-black/50 line-through">
                       {formatPrice(product.mrp)}
                     </span>
                   )}
@@ -650,7 +650,7 @@ function MobileHeaderBar({
         </button>
         <Link
           href="/"
-          className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold tracking-[0.3em] text-secondary uppercase"
+          className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold tracking-[0.3em] text-black uppercase"
         >
           <Image src={Logo} alt="Regal" width={100} height={100} />
         </Link>
@@ -682,17 +682,17 @@ function MobileSearchBar({
     >
       <form
         onSubmit={handleSearchSubmit}
-        className="flex items-center border border-gray-300 rounded-md px-3 py-2 bg-gray-50 mx-1"
+        className="flex items-center border border-black/20 rounded-md px-3 py-2 bg-white mx-1"
       >
         <input
           type="text"
           placeholder="Search products..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-grow bg-transparent outline-none text-sm"
+          className="flex-grow bg-transparent outline-none text-sm text-black"
           autoFocus={isMobileSearchOpen}
         />
-        <button type="submit" className="text-gray-500">
+        <button type="submit" className="text-black/60 hover:text-black">
           <SearchIcon className="w-5 h-5" />
         </button>
       </form>
@@ -749,23 +749,23 @@ function MobileMenuOverlay({
                   <div className="flex items-center gap-4">
                     <Link
                       href="/wishlist"
-                      className="relative text-secondary hover:text-primary"
+                      className="relative text-black hover:text-accent"
                     >
                       <HeartIcon className="w-6 h-6" />
                       {wishlist.length > 0 && (
-                        <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        <span className="absolute -top-1 -right-2 bg-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                           {wishlist.length}
                         </span>
                       )}
                     </Link>
                     <button
                       onClick={onCartClick}
-                      className="relative text-secondary hover:text-primary"
+                      className="relative text-black hover:text-accent"
                       aria-label="Open cart"
                     >
                       <ShoppingCartIcon className="w-6 h-6" />
                       {cartTotalItems > 0 && (
-                        <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        <span className="absolute -top-1 -right-2 bg-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                           {cartTotalItems}
                         </span>
                       )}
@@ -827,7 +827,7 @@ function MobileMenuOverlay({
                                 <li key={child._id || child.id}>
                                   <Link
                                     href={`/catalog?category=${child.slug}`}
-                                    className="block py-2 text-gray-700"
+                                    className="block py-2 text-black/70 hover:text-black"
                                   >
                                     {child.name}
                                   </Link>
@@ -836,7 +836,7 @@ function MobileMenuOverlay({
                               <li>
                                 <Link
                                   href={`/catalog?category=${item.slug}`}
-                                  className="block py-2 font-semibold text-gray-800"
+                                  className="block py-2 font-semibold text-black hover:text-accent"
                                 >
                                   View All
                                 </Link>
@@ -877,25 +877,25 @@ function MobileMenuOverlay({
 
               {/* Panel Footer */}
               {index === 0 && (
-                <div className="p-4 border-t text-sm text-gray-600">
+                <div className="p-4 border-t border-black/10 text-sm text-black/70">
                   <ul className="space-y-3">
                     <li>
-                      <Link href="/aboutus" className="hover:underline">
+                      <Link href="/about" className="hover:text-black transition-colors">
                         About Us
                       </Link>
                     </li>
                     <li>
-                      <Link href="/contact" className="hover:underline">
+                      <Link href="/contact" className="hover:text-black transition-colors">
                         Contact
                       </Link>
                     </li>
                     <li>
-                      <Link href="/faq" className="hover:underline">
+                      <Link href="/faq" className="hover:text-black transition-colors">
                         FAQ&apos;s
                       </Link>
                     </li>
                     <li>
-                      <Link href="/admin/dashboard" className="hover:underline">
+                      <Link href="/admin/dashboard" className="hover:text-black transition-colors">
                         Admin
                       </Link>
                     </li>

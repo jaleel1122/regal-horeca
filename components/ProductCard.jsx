@@ -7,7 +7,7 @@ import { useAppContext } from '@/context/AppContext';
 import toast from 'react-hot-toast';
 
 export default function ProductCard({ product, onAdd }) {
-  const { addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } = useAppContext();
+  const { addToWishlist, removeFromWishlist, isInWishlist, addToCart, removeFromCart, isInCart } = useAppContext();
 
   // Get product image - support multiple field names
   const productImage = 
@@ -22,7 +22,8 @@ export default function ProductCard({ product, onAdd }) {
   // Get product ID
   const productId = product._id || product.id;
   const isLiked = isInWishlist(productId);
-  const inCart = isInCart(productId);
+  // ProductCard doesn't have color selection, so check for item without color variant
+  const inCart = isInCart(productId, null);
 
   // Format price
   const formatPrice = (price) => {
@@ -58,17 +59,24 @@ export default function ProductCard({ product, onAdd }) {
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(productId, 1, {
-      price: product.price
-    });
+    if (inCart) {
+      // Remove the item without color variant (since ProductCard doesn't have color selection)
+      removeFromCart(productId, null);
+      toast.success('Removed from cart!');
+    } else {
+      addToCart(productId, 1, {
+        price: product.price
+        // No selectedColor - adding without color variant
+      });
     toast.success('Added to cart!');
+    }
   };
 
   return (
-    <div className="group border rounded-lg overflow-hidden bg-white">
+    <div className="group border border-black/10 rounded-lg overflow-hidden bg-white">
       <div className="relative">
         <Link href={`/products/${product.slug}`} className="block">
-          <div className="relative h-48 md:h-56 w-full overflow-hidden bg-gray-50">
+          <div className="relative h-48 md:h-56 w-full overflow-hidden bg-white border-b border-black/10">
             <Image
               src={productImage}
               alt={productName}
@@ -87,24 +95,24 @@ export default function ProductCard({ product, onAdd }) {
           <HeartIcon
             isFilled={isLiked}
             className={`w-4 h-4 transition-colors duration-300 ${
-              isLiked ? 'text-red-500' : 'text-gray-500'
+              isLiked ? 'text-accent' : 'text-black/50'
             }`}
           />
         </button>
       </div>
       <div className="p-3">
         <Link href={`/products/${product.slug}`}>
-          <h3 className="text-xs md:text-sm font-medium line-clamp-2">{productName}</h3>
+          <h3 className="text-xs md:text-sm font-medium text-black line-clamp-2">{productName}</h3>
         </Link>
         <div className="mt-1.5 flex items-center justify-between">
-          <div className="text-xs md:text-sm font-semibold">{formatPrice(product.price)}</div>
+          <div className="text-xs md:text-sm font-semibold text-black">{formatPrice(product.price)}</div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={handleAddToCart}
               className={`px-2 py-0.5 text-xs border rounded transition flex items-center gap-1 ${
                 inCart 
-                  ? 'bg-primary text-white border-primary' 
-                  : 'hover:bg-primary hover:text-white border-gray-300'
+                  ? 'bg-accent text-white border-accent' 
+                  : 'hover:bg-accent hover:text-white border-black/20 text-black'
               }`}
             >
               <ShoppingCartIcon className="w-3 h-3" />
@@ -113,14 +121,14 @@ export default function ProductCard({ product, onAdd }) {
             {onAdd && (
               <button
                 onClick={handleAdd}
-                className="px-2 py-0.5 text-xs border rounded hover:bg-primary hover:text-white transition"
+                className="px-2 py-0.5 text-xs border border-black/20 rounded hover:bg-accent hover:text-white text-black transition"
               >
                 Add
               </button>
             )}
             <Link
               href={`/products/${product.slug}`}
-              className="text-[10px] text-gray-500 hover:text-gray-700 transition"
+              className="text-[10px] text-black/60 hover:text-black transition"
             >
               View
             </Link>

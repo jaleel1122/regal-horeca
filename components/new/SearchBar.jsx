@@ -31,10 +31,10 @@ export default function SearchBar({ className = "", placeholder = "Search produc
   return (
     <form onSubmit={handleSubmit} className={`w-full ${className}`}>
       <div className="relative flex items-center">
-        <div className="flex items-center w-full rounded-full border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus-within:border-black focus-within:bg-white transition-all duration-200">
+        <div className="flex items-center w-full rounded-full border border-black/20 bg-white px-3 py-2 shadow-sm focus-within:border-accent focus-within:bg-white transition-all duration-200">
           
           {/* Search Icon */}
-          <Search className="w-4 h-4 mr-2 text-gray-500" />
+          <Search className="w-4 h-4 mr-2 text-black/60" />
 
           {/* Input Field */}
           <input
@@ -42,13 +42,13 @@ export default function SearchBar({ className = "", placeholder = "Search produc
             value={query}
             placeholder={placeholder}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-sm md:text-[15px] placeholder:text-gray-400"
+            className="flex-1 bg-transparent outline-none text-sm md:text-[15px] placeholder:text-black/40 text-black"
           />
 
           {/* Search Button */}
           <button
             type="submit"
-            className="ml-2 px-3 py-1 rounded-full text-xs md:text-sm font-medium border border-black bg-black text-white hover:bg-white hover:text-black transition-colors"
+            className="ml-2 px-3 py-1 rounded-full text-xs md:text-sm font-medium border border-accent bg-accent text-white hover:bg-white hover:text-accent transition-colors"
           >
             Search
           </button>

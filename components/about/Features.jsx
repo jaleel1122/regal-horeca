@@ -37,12 +37,12 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="products" className="py-24 bg-zinc-50">
+    <section id="products" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="text-regal-orange font-bold tracking-widest uppercase text-sm">What We Do</span>
-          <h2 className="font-serif text-4xl font-bold text-regal-black mt-2 mb-4">Our Expertise</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto font-light">
+          <span className="text-accent font-bold tracking-widest uppercase text-sm">What We Do</span>
+          <h2 className="text-4xl font-bold text-black mt-2 mb-4">Our Expertise</h2>
+          <p className="text-black/70 max-w-2xl mx-auto font-light">
             Comprehensive solutions for the Horeca industry, from manufacturing to last-mile delivery.
           </p>
         </div>
@@ -51,7 +51,7 @@ export default function Features() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-white border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-300 group rounded-sm overflow-hidden hover:-translate-y-2"
+              className="bg-white border border-black/10 shadow-sm hover:shadow-2xl transition-all duration-300 group rounded-sm overflow-hidden hover:-translate-y-2"
             >
               {/* Image Container */}
               <div className="h-48 overflow-hidden relative">
@@ -66,12 +66,12 @@ export default function Features() {
 
               {/* Content */}
               <div className="p-8 relative">
-                <div className="absolute -top-6 right-8 bg-regal-orange w-12 h-1 bg-opacity-0 group-hover:bg-opacity-100 transition-all duration-300"></div>
+                <div className="absolute -top-6 right-8 bg-accent w-12 h-1 bg-opacity-0 group-hover:bg-opacity-100 transition-all duration-300"></div>
                 
-                <h3 className="font-serif text-xl font-bold text-regal-black mb-3 group-hover:text-regal-orange transition-colors">
+                <h3 className="text-xl font-bold text-black mb-3 group-hover:text-accent transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-gray-500 font-light leading-relaxed text-sm">
+                <p className="text-black/70 font-light leading-relaxed text-sm">
                   {feature.desc}
                 </p>
               </div>

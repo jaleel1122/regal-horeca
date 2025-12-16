@@ -31,12 +31,12 @@ const ventures = [
 
 export default function Ventures() {
   return (
-    <section id="ventures" className="py-24 bg-zinc-50">
+    <section id="ventures" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="text-regal-black font-bold tracking-widest uppercase text-sm">Our Group</span>
-          <h2 className="font-serif text-4xl font-bold mt-2">Diversified Ventures</h2>
-          <p className="text-gray-500 mt-4 max-w-2xl mx-auto font-light">
+          <span className="text-black font-bold tracking-widest uppercase text-sm">Our Group</span>
+          <h2 className="text-4xl font-bold mt-2">Diversified Ventures</h2>
+          <p className="text-black/70 mt-4 max-w-2xl mx-auto font-light">
             Expanding excellence beyond manufacturing into real estate, hospitality, and strategic investments.
           </p>
         </div>
@@ -62,14 +62,14 @@ export default function Ventures() {
               {/* Text Content */}
               <div className="absolute bottom-0 left-0 w-full p-8 md:p-10 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
                 <div className="relative mb-4 h-1">
-                  <div className="absolute left-1/2 w-0 h-full bg-regal-orange transition-all duration-300 ease-out group-hover:w-12 group-hover:left-1/2 group-hover:-translate-x-1/2"></div>
+                  <div className="absolute left-1/2 w-0 h-full bg-accent transition-all duration-300 ease-out group-hover:w-12 group-hover:left-1/2 group-hover:-translate-x-1/2"></div>
                 </div>
                 
-                <h3 className="font-serif text-3xl font-bold mb-2">{item.title}</h3>
-                <p className="text-regal-orange text-xs font-bold uppercase tracking-widest mb-1">
+                <h3 className="text-3xl font-bold mb-2">{item.title}</h3>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-1">
                   {item.desc}
                 </p>
-                <p className="text-gray-300 text-sm font-light opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+                <p className="text-white/80 text-sm font-light opacity-80 group-hover:opacity-100 transition-opacity duration-300">
                   {item.sub}
                 </p>
               </div>

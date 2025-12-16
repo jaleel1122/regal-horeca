@@ -223,7 +223,7 @@ export default function HomePage() {
                       <div className="mt-6 flex flex-wrap items-center gap-4">
                         <Link
                           href={slide.ctaLink}
-                          className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium bg-white text-gray-900 shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 transition-all duration-300"
+                          className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium bg-white text-black shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:bg-accent hover:text-white hover:shadow-[0_15px_40px_rgba(238,64,35,0.35)] hover:-translate-y-0.5 transition-all duration-300"
                         >
                           {slide.ctaText}
                         </Link>
@@ -300,7 +300,7 @@ export default function HomePage() {
                 href={`/catalog?category=${cat.slug}`}
                 className="group block text-center"
               >
-                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="aspect-square bg-white border border-black/10 rounded-lg flex items-center justify-center overflow-hidden">
                   {cat.image ? (
                     <Image
                       src={cat.image}
@@ -310,10 +310,10 @@ export default function HomePage() {
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-200" />
+                    <div className="w-full h-full bg-white border border-black/10" />
                   )}
                 </div>
-                <h3 className="mt-4 font-semibold text-gray-800 group-hover:text-primary">
+                <h3 className="mt-4 font-semibold text-black group-hover:text-accent transition-colors">
                   {cat.name}
                 </h3>
               </Link>
@@ -323,7 +323,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-20 bg-light">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12 tracking-tight">
             Featured Products
@@ -342,10 +342,18 @@ export default function HomePage() {
                 />
               ))
             ) : (
-              <div className="col-span-full text-center py-8 text-gray-500">
+              <div className="col-span-full text-center py-8 text-black/60">
                 No featured products available
               </div>
             )}
+          </div>
+          <div className="flex justify-center mt-12">
+            <Link
+              href="/catalog"
+              className="px-5 py-2 text-md font-bold text-black border border-black/50 rounded-md hover:bg-accent hover:text-white hover:border-accent transition-colors"
+            >
+              View All 
+            </Link>
           </div>
         </div>
       </section>
@@ -370,10 +378,18 @@ export default function HomePage() {
                 />
               ))
             ) : (
-              <div className="col-span-full text-center py-8 text-gray-500">
+              <div className="col-span-full text-center py-8 text-black/60">
                 No new arrivals available
               </div>
             )}
+          </div>
+          <div className="flex justify-center mt-12">
+            <Link
+              href="/catalog"
+              className="px-5 py-2 text-md font-bold text-black border border-black rounded-md hover:bg-accent hover:text-white hover:border-accent transition-colors"
+            >
+              View All
+            </Link>
           </div>
         </div>
       </section>
@@ -387,14 +403,14 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold tracking-tight">
             45+ Years of Excellence
           </h2>
-          <p className="mt-4 max-w-3xl mx-auto text-gray-600">
+          <p className="mt-4 max-w-3xl mx-auto text-black/70">
             Regal HoReCa has been a prominent manufacturer and distributor in
             the hospitality industry, delivering quality and trust to esteemed
             clients across national and international markets.
           </p>
           <Link
-            href="/aboutus"
-            className="mt-6 inline-block text-primary font-semibold hover:underline"
+            href="/about"
+            className="mt-6 inline-block text-accent font-semibold hover:text-black transition-colors"
           >
             Learn More About Us
           </Link>

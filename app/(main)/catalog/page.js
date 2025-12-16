@@ -206,7 +206,7 @@ export default function CatalogPage() {
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-sm font-semibold uppercase tracking-wider">Categories</h3>
           {selectedCategorySlug && (
-            <Link href="/catalog" className="text-xs text-primary hover:underline font-semibold">
+            <Link href="/catalog" className="text-xs text-accent hover:text-black transition-colors font-semibold">
               Reset
             </Link>
           )}
@@ -214,7 +214,7 @@ export default function CatalogPage() {
         <ul className="space-y-2 text-sm">
           {parentCategory && (
             <li>
-              <Link href={`/catalog?category=${parentCategory.slug}`} className="flex items-center text-gray-700 hover:text-primary font-medium">
+              <Link href={`/catalog?category=${parentCategory.slug}`} className="flex items-center text-black/70 hover:text-black font-medium transition-colors">
                 <ChevronLeftIcon className="w-4 h-4 mr-1" />
                 {parentCategory.name}
               </Link>
@@ -224,7 +224,7 @@ export default function CatalogPage() {
             <li key={cat._id || cat.id} style={{ paddingLeft: parentCategory ? '1rem' : '0' }}>
               <Link
                 href={`/catalog?category=${cat.slug}`}
-                className="block text-gray-700 hover:text-primary"
+                className="block text-black/70 hover:text-black transition-colors"
               >
                 {cat.name}
               </Link>
@@ -258,7 +258,7 @@ export default function CatalogPage() {
             <button 
               key={color} 
               onClick={() => handleColorToggle(color)} 
-              className={`w-8 h-8 rounded-full border-2 ${selectedColors.includes(color) ? 'border-primary' : 'border-transparent'}`} 
+              className={`w-8 h-8 rounded-full border-2 ${selectedColors.includes(color) ? 'border-accent' : 'border-transparent'}`} 
               title={color}
             >
               <div 
@@ -277,9 +277,9 @@ export default function CatalogPage() {
                 type="checkbox" 
                 checked={selectedTags.includes(tag)} 
                 onChange={() => handleTagToggle(tag)} 
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary-500" 
+                className="h-4 w-4 rounded border-black/20 text-accent focus:ring-accent" 
               />
-              <span className="text-sm text-gray-700">{tag}</span>
+              <span className="text-sm text-black/70">{tag}</span>
             </label>
           ))}
         </div>
@@ -293,9 +293,9 @@ export default function CatalogPage() {
                   type="checkbox" 
                   checked={selectedSpecs[label]?.includes(value)} 
                   onChange={() => handleSpecToggle(label, value)} 
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary-500" 
+                  className="h-4 w-4 rounded border-black/20 text-accent focus:ring-accent" 
                 />
-                <span className="text-sm text-gray-700">{value}</span>
+                <span className="text-sm text-black/70">{value}</span>
               </label>
             ))}
           </div>
@@ -308,12 +308,12 @@ export default function CatalogPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{currentCategoryName}</h1>
-        {searchQuery && <p className="text-gray-500 mt-2">Found {filteredProducts.length} results</p>}
+        {searchQuery && <p className="text-black/60 mt-2">Found {filteredProducts.length} results</p>}
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm border-y border-medium my-8 py-4 text-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm border-y border-black/10 my-8 py-4 text-center text-black/70">
         <div>Express Delivery Dispatch within 24 Hours</div>
-        <div className="border-x-0 md:border-x border-medium">Easy Return, COD</div>
+        <div className="border-x-0 md:border-x border-black/10">Easy Return, COD</div>
         <div>100% Sustainable Packaging</div>
       </div>
 
@@ -347,7 +347,7 @@ export default function CatalogPage() {
                 id="sort" 
                 value={sortBy} 
                 onChange={e => setSortBy(e.target.value)} 
-                className="border border-medium rounded-sm p-2 text-sm"
+                className="border border-black/20 rounded-sm p-2 text-sm text-black"
               >
                 <option value="newest">Date, new to old</option>
                 <option value="price-asc">Price, low to high</option>
@@ -370,10 +370,10 @@ export default function CatalogPage() {
             </div>
           ) : (
             <div className="text-center py-16">
-              <h3 className="text-2xl font-semibold">No Products Found</h3>
-              <p className="text-gray-500 mt-2">Try adjusting your filters or search term.</p>
+              <h3 className="text-2xl font-semibold text-black">No Products Found</h3>
+              <p className="text-black/60 mt-2">Try adjusting your filters or search term.</p>
               {searchQuery && (
-                <Link href="/catalog" className="mt-4 inline-block text-primary font-medium hover:underline">
+                <Link href="/catalog" className="mt-4 inline-block text-accent font-medium hover:text-black transition-colors">
                   Clear Search
                 </Link>
               )}
