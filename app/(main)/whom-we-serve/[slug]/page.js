@@ -404,7 +404,7 @@ export default function CategoryPage() {
   return (
     <div className="">
       {/* Hero Section */}
-      <section className="relative min-h-[600px] md:min-h-[700px] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[300px] max-h-[300px] md:min-h-[700px] flex items-center justify-center overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${category.heroImage})` }}
@@ -670,7 +670,7 @@ export default function CategoryPage() {
           <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12">
             <div className="relative rounded-md overflow-hidden min-h-[300px] md:min-h-[400px] flex items-center">
               <div 
-                className="absolute inset-0 bg-cover bg-center"
+                className="absolute inset-0 bg-cover bg-center max-h-[400px]"
                 style={{ backgroundImage: `url(${categoryData.catering.heroImage})` }}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent" />
