@@ -10,6 +10,8 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db/connect';
 import Product from '@/lib/models/Product';
+import { generateUniqueSlug } from '@/lib/utils/slug';
+import { getCategoryIdsWithChildren } from '@/lib/utils/categoryCache';
 
 /**
  * GET /api/products
@@ -39,21 +41,10 @@ export async function GET(request) {
     const query = {};
     const andConditions = [];
 
-    // Category filter
+    // Category filter - use cached category tree
     if (categorySlug) {
-      const Category = (await import('@/lib/models/Category')).default;
-      const category = await Category.findOne({ slug: categorySlug });
-      if (category) {
-        // Get all subcategories recursively
-        const getAllSubcategoryIds = async (parentId) => {
-          const children = await Category.find({ parent: parentId });
-          let ids = [parentId];
-          for (const child of children) {
-            ids = ids.concat(await getAllSubcategoryIds(child._id));
-          }
-          return ids;
-        };
-        const categoryIds = await getAllSubcategoryIds(category._id);
+      const categoryIds = await getCategoryIdsWithChildren(categorySlug);
+      if (categoryIds.length > 0) {
         andConditions.push({
           $or: [
             { categoryId: { $in: categoryIds } },
@@ -98,6 +89,8 @@ export async function GET(request) {
     const products = await Product.find(query)
       .populate('categoryId', 'name slug level')
       .populate('categoryIds', 'name slug level')
+      .populate('brandCategoryId', 'name slug level')
+      .populate('brandCategoryIds', 'name slug level')
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(skip)
@@ -111,6 +104,10 @@ export async function GET(request) {
       total,
       limit,
       skip,
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      },
     });
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -139,12 +136,26 @@ export async function POST(request) {
       );
     }
 
-    // Generate slug if not provided
+    // Generate unique slug if not provided
     if (!productData.slug) {
-      productData.slug = productData.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
+      try {
+        productData.slug = await generateUniqueSlug(productData.title);
+      } catch (error) {
+        return NextResponse.json(
+          { error: 'Failed to generate slug from title', details: error.message },
+          { status: 400 }
+        );
+      }
+    } else {
+      // If slug is manually provided, still ensure it's unique
+      try {
+        productData.slug = await generateUniqueSlug(productData.slug);
+      } catch (error) {
+        return NextResponse.json(
+          { error: 'Failed to generate unique slug', details: error.message },
+          { status: 400 }
+        );
+      }
     }
 
     // Handle categoryId - only remove if it's truly empty/null/undefined
@@ -163,6 +174,21 @@ export async function POST(request) {
     } else {
       // Filter out empty values
       productData.categoryIds = productData.categoryIds.filter(id => id && id.trim() !== '');
+    }
+
+    // Handle brandCategoryId - only remove if it's truly empty/null/undefined
+    if (productData.brandCategoryId === '' || productData.brandCategoryId === null || productData.brandCategoryId === undefined) {
+      delete productData.brandCategoryId;
+    } else if (typeof productData.brandCategoryId === 'string' && productData.brandCategoryId.trim() === '') {
+      delete productData.brandCategoryId;
+    }
+
+    // Handle brandCategoryIds array
+    if (!productData.brandCategoryIds || !Array.isArray(productData.brandCategoryIds)) {
+      productData.brandCategoryIds = [];
+    } else {
+      // Filter out empty values
+      productData.brandCategoryIds = productData.brandCategoryIds.filter(id => id && id.trim() !== '');
     }
 
     // Set defaults for optional fields
@@ -207,6 +233,8 @@ export async function POST(request) {
       product: await Product.findById(product._id)
         .populate('categoryId')
         .populate('categoryIds', 'name slug level')
+        .populate('brandCategoryId', 'name slug level')
+        .populate('brandCategoryIds', 'name slug level')
         .lean(),
     }, { status: 201 });
   } catch (error) {

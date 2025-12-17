@@ -16,6 +16,10 @@ import { useAppContext } from '@/context/AppContext';
 import { PlusIcon, MinusIcon, FilterIcon, XIcon, ChevronLeftIcon } from '@/components/Icons';
 
 const FILTERABLE_SPECS = ['Diameter', 'Volume'];
+const PREDEFINED_COLORS = [
+  'Blue', 'Green', 'Red', 'Yellow', 'Purple', 'Orange', 
+  'Pink', 'Brown', 'Gray', 'Black', 'White', 'Silver'
+];
 
 export default function CatalogPage() {
   const { products, categories, loading } = useAppContext();
@@ -26,11 +30,10 @@ export default function CatalogPage() {
   const [openFilterSections, setOpenFilterSections] = useState({
     price: true,
     color: true,
-    tags: true,
   });
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [selectedColors, setSelectedColors] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState({});
   const [selectedSpecs, setSelectedSpecs] = useState({});
   const [sortBy, setSortBy] = useState('newest');
 
@@ -116,8 +119,25 @@ export default function CatalogPage() {
     
     if (priceRange.min) filtered = filtered.filter(p => p.price >= Number(priceRange.min));
     if (priceRange.max) filtered = filtered.filter(p => p.price <= Number(priceRange.max));
-    if (selectedColors.length > 0) filtered = filtered.filter(p => p.filters?.color?.some(c => selectedColors.includes(c)));
-    if (selectedTags.length > 0) filtered = filtered.filter(p => p.tags?.some(t => selectedTags.includes(t)));
+    if (selectedColors.length > 0) {
+      filtered = filtered.filter(p => {
+        // Check if product has any of the selected predefined colors in colorVariants
+        const productColors = p.colorVariants
+          ?.map(cv => cv.colorName)
+          .filter(colorName => PREDEFINED_COLORS.includes(colorName)) || [];
+        return productColors.some(c => selectedColors.includes(c));
+      });
+    }
+    
+    // Apply dynamic filters
+    Object.entries(selectedFilters).forEach(([filterKey, filterValues]) => {
+      if (filterValues.length > 0) {
+        filtered = filtered.filter(p => {
+          const productFilter = p.filters?.find(f => f.key === filterKey);
+          return productFilter && productFilter.values?.some(v => filterValues.includes(v));
+        });
+      }
+    });
     
     Object.entries(selectedSpecs).forEach(([specLabel, specValues]) => {
       if (specValues.length > 0) {
@@ -146,16 +166,32 @@ export default function CatalogPage() {
     }
 
     return filtered;
-  }, [selectedCategorySlug, selectedBusinessSlug, searchQuery, priceRange, selectedColors, selectedTags, selectedSpecs, sortBy, products, categories]);
+  }, [selectedCategorySlug, selectedBusinessSlug, searchQuery, priceRange, selectedColors, selectedFilters, selectedSpecs, sortBy, products, categories]);
 
   const filterOptions = useMemo(() => {
     const allColors = new Set();
-    const allTags = new Set();
+    const allFilters = {};
     const allSpecs = {};
 
     products.forEach(p => {
-      p.filters?.color?.forEach(c => allColors.add(c));
-      p.tags?.forEach(t => allTags.add(t));
+      // Only collect predefined colors from colorVariants
+      p.colorVariants?.forEach(cv => {
+        if (PREDEFINED_COLORS.includes(cv.colorName)) {
+          allColors.add(cv.colorName);
+        }
+      });
+      
+      // Dynamic filters
+      if (Array.isArray(p.filters)) {
+        p.filters.forEach(filter => {
+          if (filter.key && filter.values && filter.values.length > 0) {
+            if (!allFilters[filter.key]) allFilters[filter.key] = new Set();
+            filter.values.forEach(v => allFilters[filter.key].add(v));
+          }
+        });
+      }
+      
+      // Specifications
       p.specifications?.forEach(spec => {
         if (FILTERABLE_SPECS.includes(spec.label)) {
           if (!allSpecs[spec.label]) allSpecs[spec.label] = new Set();
@@ -163,19 +199,39 @@ export default function CatalogPage() {
         }
       });
     });
-    return {
-      colors: Array.from(allColors),
-      tags: Array.from(allTags),
-      specs: Object.fromEntries(Object.entries(allSpecs).map(([key, value]) => [key, Array.from(value)]))
-    };
+  return {
+    colors: Array.from(allColors).sort(), // Sort for consistent display
+    filters: Object.fromEntries(Object.entries(allFilters).map(([key, value]) => [key, Array.from(value)])),
+    specs: Object.fromEntries(Object.entries(allSpecs).map(([key, value]) => [key, Array.from(value)]))
+  };
   }, [products]);
+
+  // Initialize filter sections dynamically
+  useEffect(() => {
+    if (filterOptions.filters && Object.keys(filterOptions.filters).length > 0) {
+      setOpenFilterSections(prev => {
+        const newSections = { ...prev };
+        Object.keys(filterOptions.filters).forEach(key => {
+          const sectionId = key.toLowerCase();
+          if (newSections[sectionId] === undefined) {
+            newSections[sectionId] = true;
+          }
+        });
+        return newSections;
+      });
+    }
+  }, [filterOptions.filters]);
 
   const toggleFilterSection = (section) => setOpenFilterSections(prev => ({ ...prev, [section]: !prev[section] }));
   const handleColorToggle = (color) => {
     setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
   };
-  const handleTagToggle = (tag) => {
-    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+  const handleFilterToggle = (filterKey, value) => {
+    setSelectedFilters(prev => {
+      const current = prev[filterKey] || [];
+      const updated = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
+      return { ...prev, [filterKey]: updated };
+    });
   };
   const handleSpecToggle = (label, value) => {
     setSelectedSpecs(prev => {
@@ -266,21 +322,6 @@ export default function CatalogPage() {
                 style={{ backgroundColor: color.toLowerCase() === 'white' ? '#f8f8f8' : color.toLowerCase() }}
               />
             </button>
-          ))}
-        </div>
-      </FilterSection>
-      <FilterSection title="Tags" id="tags">
-        <div className="space-y-2">
-          {filterOptions.tags.map(tag => (
-            <label key={tag} className="flex items-center space-x-2 cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={selectedTags.includes(tag)} 
-                onChange={() => handleTagToggle(tag)} 
-                className="h-4 w-4 rounded border-black/20 text-accent focus:ring-accent" 
-              />
-              <span className="text-sm text-black/70">{tag}</span>
-            </label>
           ))}
         </div>
       </FilterSection>

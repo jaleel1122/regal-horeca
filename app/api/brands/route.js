@@ -1,19 +1,18 @@
 /**
- * Categories API Route
+ * Brands API Route
  * 
- * Handles CRUD operations for categories.
+ * Handles CRUD operations for brands.
  * 
- * GET /api/categories - Get all categories (optionally as tree)
- * POST /api/categories - Create a new category (admin only)
+ * GET /api/brands - Get all brands (optionally as tree)
+ * POST /api/brands - Create a new brand (admin only)
  */
 
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db/connect';
-import Category from '@/lib/models/Category';
-import { clearCategoryCache } from '@/lib/utils/categoryCache';
+import Brand from '@/lib/models/Brand';
 
 /**
- * GET /api/categories
+ * GET /api/brands
  * Query parameters:
  * - tree: Return as tree structure (true/false)
  * - level: Filter by level
@@ -29,15 +28,11 @@ export async function GET(request) {
     const parentId = searchParams.get('parent');
 
     if (asTree) {
-      // Return as tree structure (cached on client side via SWR)
-      const tree = await Category.buildTree();
+      // Return as tree structure
+      const tree = await Brand.buildTree();
       return NextResponse.json({
         success: true,
-        categories: tree,
-      }, {
-        headers: {
-          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-        },
+        brands: tree,
       });
     }
 
@@ -49,7 +44,7 @@ export async function GET(request) {
     // Only filter by parent if explicitly requested
     // If parentId is 'null' string, filter for null parents
     // If parentId is provided, filter by that parent ID
-    // If parentId is not provided (null), don't filter - return all categories
+    // If parentId is not provided (null), don't filter - return all brands
     if (parentId !== null && parentId !== undefined) {
       if (parentId === 'null') {
         query.parent = null;
@@ -57,43 +52,39 @@ export async function GET(request) {
         query.parent = parentId;
       }
     }
-    // If no parentId parameter, don't add parent filter - return all categories
+    // If no parentId parameter, don't add parent filter - return all brands
 
-    // Get all categories
-    const categories = await Category.find(query)
+    // Get all brands
+    const brands = await Brand.find(query)
       .populate('parent', 'name slug level')
       .sort({ name: 1 })
       .lean();
 
     return NextResponse.json({
       success: true,
-      categories,
-    }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-      },
+      brands,
     });
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('Error fetching brands:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch categories', details: error.message },
+      { error: 'Failed to fetch brands', details: error.message },
       { status: 500 }
     );
   }
 }
 
 /**
- * POST /api/categories
- * Body: Category object
+ * POST /api/brands
+ * Body: Brand object
  */
 export async function POST(request) {
   try {
     await connectToDatabase();
 
-    const categoryData = await request.json();
+    const brandData = await request.json();
 
     // Validate required fields
-    if (!categoryData.name || !categoryData.level) {
+    if (!brandData.name || !brandData.level) {
       return NextResponse.json(
         { error: 'Name and level are required' },
         { status: 400 }
@@ -101,37 +92,34 @@ export async function POST(request) {
     }
 
     // Generate slug if not provided
-    if (!categoryData.slug) {
-      categoryData.slug = categoryData.name
+    if (!brandData.slug) {
+      brandData.slug = brandData.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
     }
 
-    // Create category
-    const category = new Category(categoryData);
-    await category.save();
-
-    // Clear category cache since structure changed
-    clearCategoryCache();
+    // Create brand
+    const brand = new Brand(brandData);
+    await brand.save();
 
     return NextResponse.json({
       success: true,
-      category: await Category.findById(category._id).populate('parent').lean(),
+      brand: await Brand.findById(brand._id).populate('parent').lean(),
     }, { status: 201 });
   } catch (error) {
-    console.error('Error creating category:', error);
+    console.error('Error creating brand:', error);
     
     // Handle duplicate slug error
     if (error.code === 11000) {
       return NextResponse.json(
-        { error: 'Category with this slug already exists' },
+        { error: 'Brand with this slug already exists' },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to create category', details: error.message },
+      { error: 'Failed to create brand', details: error.message },
       { status: 500 }
     );
   }

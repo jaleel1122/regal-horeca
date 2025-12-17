@@ -30,6 +30,7 @@ export function AppProvider({ children }) {
   // State for data
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [businessTypes, setBusinessTypes] = useState([]);
   
   // State for UI
@@ -56,11 +57,12 @@ export function AppProvider({ children }) {
     }
   }, []);
 
-  // Fetch products from API
+  // Fetch products from API - reduced limit for better performance
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const response = await fetch('/api/products?limit=1000');
+        // Reduced limit from 1000 to 100 - use pagination when needed
+        const response = await fetch('/api/products?limit=100');
         const data = await response.json();
         if (data.success) {
           setProducts(data.products || []);
@@ -101,6 +103,34 @@ export function AppProvider({ children }) {
     }
 
     fetchCategories();
+  }, []);
+
+  // Fetch brands from API
+  useEffect(() => {
+    async function fetchBrands() {
+      try {
+        const response = await fetch('/api/brands?tree=true');
+        const data = await response.json();
+        if (data.success) {
+          // Flatten tree structure for easier access
+          const flattenBrands = (brs) => {
+            let result = [];
+            brs.forEach(brand => {
+              result.push(brand);
+              if (brand.children && brand.children.length > 0) {
+                result = result.concat(flattenBrands(brand.children));
+              }
+            });
+            return result;
+          };
+          setBrands(flattenBrands(data.brands || []));
+        }
+      } catch (error) {
+        console.error('Failed to fetch brands:', error);
+      }
+    }
+
+    fetchBrands();
   }, []);
 
   // Fetch business types from API
@@ -302,10 +332,10 @@ export function AppProvider({ children }) {
     }));
   };
 
-  // Refresh products from API
+  // Refresh products from API - reduced limit
   const refreshProducts = useCallback(async () => {
     try {
-      const response = await fetch('/api/products?limit=1000');
+      const response = await fetch('/api/products?limit=100');
       const data = await response.json();
       if (data.success) {
         setProducts(data.products || []);
@@ -339,10 +369,35 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  // Refresh brands from API
+  const refreshBrands = useCallback(async () => {
+    try {
+      const response = await fetch('/api/brands?tree=true');
+      const data = await response.json();
+      if (data.success) {
+        // Flatten tree structure for easier access
+        const flattenBrands = (brs) => {
+          let result = [];
+          brs.forEach(brand => {
+            result.push(brand);
+            if (brand.children && brand.children.length > 0) {
+              result = result.concat(flattenBrands(brand.children));
+            }
+          });
+          return result;
+        };
+        setBrands(flattenBrands(data.brands || []));
+      }
+    } catch (error) {
+      console.error('Failed to refresh brands:', error);
+    }
+  }, []);
+
   const value = {
     // Data
     products,
     categories,
+    brands,
     businessTypes,
     loading,
     
@@ -371,6 +426,7 @@ export function AppProvider({ children }) {
     deleteProduct,
     refreshProducts,
     refreshCategories,
+    refreshBrands,
   };
 
   return (
