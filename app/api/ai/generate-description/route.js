@@ -70,8 +70,10 @@ export async function POST(request) {
     // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Use gemini-1.5-flash for faster, cost-effective responses
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Use gemini-2.5-flash-lite for best free tier performance
+    // Benefits: 30 RPM (requests per minute), 1,500 RPD (requests per day)
+    // Perfect for high-volume product description generation
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
     // Configure generation settings
     const generationConfig = {

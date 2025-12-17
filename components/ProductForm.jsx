@@ -776,15 +776,6 @@ export default function ProductForm({ product, allProducts, onSave, onCancel }) 
     });
   };
 
-  const departments = categories.filter(c => c.level === 'department');
-  const categoriesList = categorySelection.department ? getCategoriesByParent(categorySelection.department) : [];
-  const subcategories = categorySelection.category ? getCategoriesByParent(categorySelection.category) : [];
-  const types = categorySelection.subcategory ? getCategoriesByParent(categorySelection.subcategory) : [];
-
-  const brandDepartments = brands.filter(b => b.level === 'department');
-  const brandCategoriesList = brandSelection.department ? getBrandsByParent(brandSelection.department) : [];
-  const brandSubcategories = brandSelection.category ? getBrandsByParent(brandSelection.category) : [];
-
   const getBrandsByParent = (parentId) => {
     if (!parentId) {
       return brands.filter(b => {
@@ -798,6 +789,15 @@ export default function ProductForm({ product, allProducts, onSave, onCancel }) 
       return bParent?.toString() === parentId.toString();
     });
   };
+
+  const departments = categories.filter(c => c.level === 'department');
+  const categoriesList = categorySelection.department ? getCategoriesByParent(categorySelection.department) : [];
+  const subcategories = categorySelection.category ? getCategoriesByParent(categorySelection.category) : [];
+  const types = categorySelection.subcategory ? getCategoriesByParent(categorySelection.subcategory) : [];
+
+  const brandDepartments = brands.filter(b => b.level === 'department');
+  const brandCategoriesList = brandSelection.department ? getBrandsByParent(brandSelection.department) : [];
+  const brandSubcategories = brandSelection.category ? getBrandsByParent(brandSelection.category) : [];
 
   const handleBrandCategoryChange = (level, id) => {
     const newSelection = { [level]: id };
