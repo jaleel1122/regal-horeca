@@ -2,11 +2,18 @@
  * Custom Hook: useProductFilters
  * 
  * Manages product filtering logic with URL state synchronization.
+ * 
+ * GOLDEN RULE:
+ * - Filterable → lives in filters (sidebar, from admin form)
+ * - Descriptive → lives in specifications (product detail page only)
+ * 
  * Handles:
  * - Context-aware filtering (category, business, search)
- * - User filters (price, colors, brands, filters, specs, status)
+ * - User filters (price, colors, brands, filters)
  * - URL state management
  * - Filter validation and debouncing
+ * 
+ * NOTE: Specifications are NOT included - they are for product detail page only
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -49,9 +56,9 @@ export function useProductFilters(products, categories) {
   const priceMax = searchParams.get('priceMax') || '';
   const colorsParam = searchParams.get('colors') || '';
   const brandsParam = searchParams.get('brands') || '';
-  const statusParam = searchParams.get('status') || '';
   const filtersParam = searchParams.get('filters') || '';
-  const specsParam = searchParams.get('specs') || '';
+  // NOTE: specs removed - they are for product detail page only
+  // NOTE: status removed - not needed in sidebar
 
   // Parse URL params into arrays/objects
   const selectedColors = useMemo(() => 
@@ -62,10 +69,6 @@ export function useProductFilters(products, categories) {
     brandsParam ? brandsParam.split(',').filter(Boolean) : [], 
     [brandsParam]
   );
-  const selectedStatus = useMemo(() => 
-    statusParam ? statusParam.split(',').filter(Boolean) : [], 
-    [statusParam]
-  );
   const selectedFilters = useMemo(() => {
     if (!filtersParam) return {};
     try {
@@ -75,15 +78,6 @@ export function useProductFilters(products, categories) {
       return {};
     }
   }, [filtersParam]);
-  const selectedSpecs = useMemo(() => {
-    if (!specsParam) return {};
-    try {
-      const parsed = JSON.parse(decodeURIComponent(specsParam));
-      return typeof parsed === 'object' ? parsed : {};
-    } catch {
-      return {};
-    }
-  }, [specsParam]);
 
   // Debounced price inputs for URL updates
   const [priceMinInput, setPriceMinInput] = useState(priceMin);
@@ -139,10 +133,7 @@ export function useProductFilters(products, categories) {
       if (updates.brands.length > 0) params.set('brands', updates.brands.join(','));
       else params.delete('brands');
     }
-    if (updates.status !== undefined) {
-      if (updates.status.length > 0) params.set('status', updates.status.join(','));
-      else params.delete('status');
-    }
+    // Status removed from URL updates - not needed in sidebar
     if (updates.filters !== undefined) {
       if (Object.keys(updates.filters).length > 0) {
         params.set('filters', encodeURIComponent(JSON.stringify(updates.filters)));
@@ -150,13 +141,7 @@ export function useProductFilters(products, categories) {
         params.delete('filters');
       }
     }
-    if (updates.specs !== undefined) {
-      if (Object.keys(updates.specs).length > 0) {
-        params.set('specs', encodeURIComponent(JSON.stringify(updates.specs)));
-      } else {
-        params.delete('specs');
-      }
-    }
+    // NOTE: specs removed from URL updates - they are for product detail page only
 
     router.push(`/catalog?${params.toString()}`, { scroll: false });
   }, [searchParams, router]);
@@ -241,32 +226,34 @@ export function useProductFilters(products, categories) {
       );
     }
 
-    // Status filter
-    if (selectedStatus.length > 0) {
-      filtered = filtered.filter(p => 
-        p.status && selectedStatus.includes(p.status)
-      );
-    }
+    // Status filter removed - not needed in sidebar
 
-    // Dynamic filters
+    // Dynamic filters (from admin form - the ONLY source for sidebar filters)
+    // Uses case-insensitive matching to handle variations like "porcelain" vs "Porcelain"
     Object.entries(selectedFilters).forEach(([filterKey, filterValues]) => {
       if (filterValues.length > 0) {
+        // Normalize selected filter values for comparison
+        const normalizedFilterValues = filterValues.map(v => 
+          v.trim().charAt(0).toUpperCase() + v.trim().slice(1).toLowerCase()
+        );
         filtered = filtered.filter(p => {
-          const productFilter = p.filters?.find(f => f.key === filterKey);
-          return productFilter && productFilter.values?.some(v => filterValues.includes(v));
+          // Find filter with case-insensitive key match
+          const productFilter = p.filters?.find(f => {
+            const normalizedKey = f.key?.trim().charAt(0).toUpperCase() + f.key?.trim().slice(1).toLowerCase();
+            return normalizedKey === filterKey;
+          });
+          if (!productFilter) return false;
+          // Check if any product value matches (case-insensitive)
+          return productFilter.values?.some(v => {
+            const normalizedValue = v?.trim().charAt(0).toUpperCase() + v?.trim().slice(1).toLowerCase();
+            return normalizedFilterValues.includes(normalizedValue);
+          });
         });
       }
     });
 
-    // Specifications
-    Object.entries(selectedSpecs).forEach(([specLabel, specValues]) => {
-      if (specValues.length > 0) {
-        filtered = filtered.filter(p => {
-          const productSpec = p.specifications?.find(s => s.label === specLabel);
-          return productSpec && specValues.includes(`${productSpec.value}${productSpec.unit || ''}`);
-        });
-      }
-    });
+    // NOTE: Specifications filtering removed
+    // Golden Rule: filterable = filters (admin form), descriptive = specifications (product detail only)
 
     // Sorting
     switch (sortBy) {
@@ -293,9 +280,7 @@ export function useProductFilters(products, categories) {
     priceMax,
     selectedColors,
     selectedBrands,
-    selectedStatus,
     selectedFilters,
-    selectedSpecs,
     sortBy
   ]);
 
@@ -322,13 +307,6 @@ export function useProductFilters(products, categories) {
     updateURL({ brands: newBrands });
   }, [selectedBrands, updateURL]);
 
-  const handleStatusToggle = useCallback((status) => {
-    const newStatus = selectedStatus.includes(status)
-      ? selectedStatus.filter(s => s !== status)
-      : [...selectedStatus, status];
-    updateURL({ status: newStatus });
-  }, [selectedStatus, updateURL]);
-
   const handleFilterToggle = useCallback((filterKey, value) => {
     const current = selectedFilters[filterKey] || [];
     const updated = current.includes(value)
@@ -344,21 +322,6 @@ export function useProductFilters(products, categories) {
     updateURL({ filters: newFilters });
   }, [selectedFilters, updateURL]);
 
-  const handleSpecToggle = useCallback((label, value) => {
-    const current = selectedSpecs[label] || [];
-    const updated = current.includes(value)
-      ? current.filter(v => v !== value)
-      : [...current, value];
-    const newSpecs = { ...selectedSpecs, [label]: updated };
-    // Remove empty arrays
-    Object.keys(newSpecs).forEach(key => {
-      if (newSpecs[key].length === 0) {
-        delete newSpecs[key];
-      }
-    });
-    updateURL({ specs: newSpecs });
-  }, [selectedSpecs, updateURL]);
-
   const handleSortChange = useCallback((newSort) => {
     updateURL({ sort: newSort });
   }, [updateURL]);
@@ -369,9 +332,7 @@ export function useProductFilters(products, categories) {
       priceMax: '',
       colors: [],
       brands: [],
-      status: [],
       filters: {},
-      specs: {},
     });
     setPriceMinInput('');
     setPriceMaxInput('');
@@ -384,11 +345,9 @@ export function useProductFilters(products, categories) {
       priceMax ||
       selectedColors.length > 0 ||
       selectedBrands.length > 0 ||
-      selectedStatus.length > 0 ||
-      Object.keys(selectedFilters).length > 0 ||
-      Object.keys(selectedSpecs).length > 0
+      Object.keys(selectedFilters).length > 0
     );
-  }, [priceMin, priceMax, selectedColors, selectedBrands, selectedStatus, selectedFilters, selectedSpecs]);
+  }, [priceMin, priceMax, selectedColors, selectedBrands, selectedFilters]);
 
   return {
     // Context filters
@@ -405,9 +364,7 @@ export function useProductFilters(products, categories) {
     },
     selectedColors,
     selectedBrands,
-    selectedStatus,
     selectedFilters,
-    selectedSpecs,
     sortBy,
     
     // Filtered products
@@ -419,9 +376,7 @@ export function useProductFilters(products, categories) {
     handlePriceMaxChange,
     handleColorToggle,
     handleBrandToggle,
-    handleStatusToggle,
     handleFilterToggle,
-    handleSpecToggle,
     handleSortChange,
     clearAllFilters,
     
@@ -429,4 +384,3 @@ export function useProductFilters(products, categories) {
     hasActiveFilters,
   };
 }
-

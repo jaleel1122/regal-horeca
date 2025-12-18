@@ -9,10 +9,14 @@
  * Returns:
  * - colors: Available colors in current product set
  * - brands: Available brands in current product set
- * - filters: Dynamic filters (Material, Size, etc.) with counts
- * - specs: Available specifications (Diameter, Volume, etc.) with counts
+ * - filters: Dynamic filters (Material, Size, etc.) with counts - FROM ADMIN FORM ONLY
  * - priceRange: Min/max price in current product set
- * - statuses: Available statuses (In Stock, Out of Stock, Pre-Order)
+ * 
+ * GOLDEN RULE:
+ * - Filterable → lives in filters (for sidebar)
+ * - Descriptive → lives in specifications (for product detail page only)
+ * 
+ * Specifications are NOT included in facets - they are for product detail page only.
  */
 
 import { NextResponse } from 'next/server';
@@ -24,8 +28,6 @@ const PREDEFINED_COLORS = [
   'Blue', 'Green', 'Red', 'Yellow', 'Purple', 'Orange', 
   'Pink', 'Brown', 'Gray', 'Black', 'White', 'Silver'
 ];
-
-const FILTERABLE_SPECS = ['Diameter', 'Volume', 'Capacity', 'Size', 'Weight', 'Length', 'Width', 'Height'];
 
 // Mark route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -91,16 +93,18 @@ export async function GET(request) {
 
     // Get products matching the base query (for facet calculation)
     // We don't need to populate or sort for facets, just get the data
+    // NOTE: Specifications are NOT included - they are for product detail page only
     const products = await Product.find(query)
-      .select('colorVariants brand filters specifications price status')
+      .select('colorVariants brand filters price status')
       .lean();
 
     // Calculate facets from products
+    // Only extract: colors, brands, filters (from admin form), price
+    // Specifications are intentionally excluded (Golden Rule: filterable = filters, descriptive = specifications)
+    // Status/Availability removed from sidebar filters
     const colors = new Set();
     const brands = new Set();
     const filters = {};
-    const specs = {};
-    const statuses = new Set();
     let minPrice = Infinity;
     let maxPrice = -Infinity;
 
@@ -119,43 +123,31 @@ export async function GET(request) {
         brands.add(product.brand.trim());
       }
 
-      // Dynamic filters
+      // Dynamic filters (from admin form - the ONLY source for sidebar filters)
       if (product.filters && Array.isArray(product.filters)) {
         product.filters.forEach(filter => {
           if (filter.key && filter.values && Array.isArray(filter.values)) {
-            if (!filters[filter.key]) {
-              filters[filter.key] = {};
+            // Normalize filter key (capitalize first letter)
+            const normalizedKey = filter.key.trim().charAt(0).toUpperCase() + filter.key.trim().slice(1).toLowerCase();
+            if (!filters[normalizedKey]) {
+              filters[normalizedKey] = {};
             }
             filter.values.forEach(value => {
               if (value && value.trim()) {
-                const trimmedValue = value.trim();
-                filters[filter.key][trimmedValue] = (filters[filter.key][trimmedValue] || 0) + 1;
+                // Normalize value: capitalize first letter, rest lowercase
+                // This ensures "porcelain", "Porcelain", "PORCELAIN" all become "Porcelain"
+                const normalizedValue = value.trim().charAt(0).toUpperCase() + value.trim().slice(1).toLowerCase();
+                filters[normalizedKey][normalizedValue] = (filters[normalizedKey][normalizedValue] || 0) + 1;
               }
             });
           }
         });
       }
 
-      // Specifications
-      if (product.specifications && Array.isArray(product.specifications)) {
-        product.specifications.forEach(spec => {
-          if (spec.label && FILTERABLE_SPECS.includes(spec.label)) {
-            const specKey = spec.label;
-            const specValue = `${spec.value || ''}${spec.unit || ''}`.trim();
-            if (specValue) {
-              if (!specs[specKey]) {
-                specs[specKey] = {};
-              }
-              specs[specKey][specValue] = (specs[specKey][specValue] || 0) + 1;
-            }
-          }
-        });
-      }
+      // NOTE: Specifications are NOT extracted here
+      // They are for product detail page only, not for sidebar filtering
 
-      // Status
-      if (product.status) {
-        statuses.add(product.status);
-      }
+      // NOTE: Status/Availability removed from sidebar filters
 
       // Price range
       if (typeof product.price === 'number' && product.price >= 0) {
@@ -167,9 +159,8 @@ export async function GET(request) {
     // Convert sets to sorted arrays
     const colorsArray = Array.from(colors).sort();
     const brandsArray = Array.from(brands).sort();
-    const statusesArray = Array.from(statuses).sort();
 
-    // Convert filter/spec objects to arrays with counts
+    // Convert filter objects to arrays with counts
     const filtersWithCounts = {};
     Object.keys(filters).forEach(key => {
       filtersWithCounts[key] = Object.entries(filters[key])
@@ -177,20 +168,7 @@ export async function GET(request) {
         .sort((a, b) => a.value.localeCompare(b.value));
     });
 
-    const specsWithCounts = {};
-    Object.keys(specs).forEach(key => {
-      specsWithCounts[key] = Object.entries(specs[key])
-        .map(([value, count]) => ({ value, count }))
-        .sort((a, b) => {
-          // Try to sort numerically if possible
-          const aNum = parseFloat(a.value);
-          const bNum = parseFloat(b.value);
-          if (!isNaN(aNum) && !isNaN(bNum)) {
-            return aNum - bNum;
-          }
-          return a.value.localeCompare(b.value);
-        });
-    });
+    // NOTE: specs are NOT included in response - they are for product detail page only
 
     return NextResponse.json({
       success: true,
@@ -198,8 +176,8 @@ export async function GET(request) {
         colors: colorsArray,
         brands: brandsArray,
         filters: filtersWithCounts,
-        specs: specsWithCounts,
-        statuses: statusesArray,
+        // specs removed - Golden Rule: filterable = filters, descriptive = specifications
+        // statuses removed - not needed in sidebar
         priceRange: {
           min: minPrice === Infinity ? 0 : Math.floor(minPrice),
           max: maxPrice === -Infinity ? 0 : Math.ceil(maxPrice),
