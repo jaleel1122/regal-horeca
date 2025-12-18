@@ -265,7 +265,7 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="prose prose-sm text-black/70 mb-8">
-              <p>{product.description || 'No description available.'}</p>
+              <p>{product.summary || 'No description available.'}</p>
             </div>
 
             {/* Color Variants */}
@@ -401,15 +401,6 @@ export default function ProductDetailPage() {
                   Specifications
                   {activeTab === 'specs' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-accent"></div>}
                 </button>
-                <button 
-                  onClick={() => setActiveTab('shipping')}
-                  className={`pb-4 px-4 font-medium text-sm transition-colors relative ${
-                    activeTab === 'shipping' ? 'text-accent' : 'text-black/60 hover:text-black'
-                  }`}
-                >
-                  Shipping
-                  {activeTab === 'shipping' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-accent"></div>}
-                </button>
               </div>
 
               <div className="min-h-[200px]">
@@ -450,17 +441,6 @@ export default function ProductDetailPage() {
                     ) : (
                       <div className="px-6 py-4 text-sm text-black/60">No specifications available.</div>
                     )}
-                  </div>
-                )}
-
-                {activeTab === 'shipping' && (
-                  <div className="text-black/70 space-y-4">
-                    <p><strong>Processing Time:</strong> Orders are processed within 1-2 business days.</p>
-                    <p><strong>Shipping Methods:</strong> We offer Standard Ground (5-7 days) and Expedited (2-3 days) shipping options via FedEx or UPS.</p>
-                    <p><strong>Freight Shipping:</strong> Large bulk orders may be shipped via freight carrier. Our team will contact you to coordinate delivery.</p>
-                    <div className="bg-accent/10 border border-accent/20 p-4 rounded-md text-sm text-black/80">
-                      Note: Due to the size of this item, it may be subject to dimensional weight shipping charges if ordered in single quantities.
-                    </div>
                   </div>
                 )}
               </div>
