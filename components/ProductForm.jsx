@@ -1345,10 +1345,20 @@ export default function ProductForm({ product, allProducts, onSave, onCancel }) 
   const handleColorChange = (color) => {
     const currentVariants = formData.colorVariants || [];
     const isSelected = currentVariants.some(v => v.colorName === color.name);
-    const newVariants = isSelected
-      ? currentVariants.filter(v => v.colorName !== color.name)
-      : [...currentVariants, { colorName: color.name, colorHex: color.hex, images: [] }];
-    setFormData({ ...formData, colorVariants: newVariants });
+    
+    if (isSelected) {
+      // Removing a color - if it was default, we don't need to reassign
+      const newVariants = currentVariants.filter(v => v.colorName !== color.name);
+      setFormData({ ...formData, colorVariants: newVariants });
+    } else {
+      // Adding a new color - set as default if it's the first one
+      const isFirstColor = currentVariants.length === 0;
+      const newVariants = [
+        ...currentVariants,
+        { colorName: color.name, colorHex: color.hex, images: [], isDefault: isFirstColor }
+      ];
+      setFormData({ ...formData, colorVariants: newVariants });
+    }
   };
 
   const handleAddCustomColor = () => {
@@ -1368,9 +1378,11 @@ export default function ProductForm({ product, allProducts, onSave, onCancel }) 
       return;
     }
 
+    // Set as default if it's the first color
+    const isFirstColor = currentVariants.length === 0;
     const newVariants = [
       ...currentVariants,
-      { colorName: customColorName.trim(), colorHex: customColorHex.toUpperCase(), images: [] }
+      { colorName: customColorName.trim(), colorHex: customColorHex.toUpperCase(), images: [], isDefault: isFirstColor }
     ];
     setFormData({ ...formData, colorVariants: newVariants });
     setShowColorPicker(false);
@@ -1381,7 +1393,26 @@ export default function ProductForm({ product, allProducts, onSave, onCancel }) 
 
   const handleRemoveCustomColor = (colorName) => {
     const currentVariants = formData.colorVariants || [];
+    const removedVariant = currentVariants.find(v => v.colorName === colorName);
     const newVariants = currentVariants.filter(v => v.colorName !== colorName);
+    
+    // If removed variant was default and there are other variants, set first one as default
+    if (removedVariant?.isDefault && newVariants.length > 0) {
+      newVariants[0] = { ...newVariants[0], isDefault: true };
+    }
+    
+    setFormData({ ...formData, colorVariants: newVariants });
+  };
+
+  /**
+   * Set a color variant as the default (only one can be default at a time)
+   */
+  const handleSetDefaultColor = (colorName) => {
+    const currentVariants = formData.colorVariants || [];
+    const newVariants = currentVariants.map(v => ({
+      ...v,
+      isDefault: v.colorName === colorName
+    }));
     setFormData({ ...formData, colorVariants: newVariants });
   };
 
@@ -2412,15 +2443,49 @@ export default function ProductForm({ product, allProducts, onSave, onCancel }) 
           )}
               {formData.colorVariants && formData.colorVariants.length > 0 && (
                 <div className="space-y-4 pt-5 border-t border-gray-200 mt-5">
-                  <label className="block text-sm font-medium mb-3 text-gray-700">Upload images for selected colors:</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">Upload images for selected colors:</label>
+                    <p className="text-xs text-gray-500">
+                      ⭐ = Default color (shown when page loads)
+                    </p>
+                  </div>
                   {formData.colorVariants.map(variant => (
-                    <div key={variant.colorName} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span 
-                          style={{ backgroundColor: variant.colorHex }} 
-                          className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
-                        ></span>
-                        <p className="font-semibold text-sm text-gray-900">{variant.colorName}</p>
+                    <div 
+                      key={variant.colorName} 
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        variant.isDefault 
+                          ? 'bg-amber-50 border-amber-300' 
+                          : 'bg-gray-50 border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <span 
+                            style={{ backgroundColor: variant.colorHex }} 
+                            className={`w-6 h-6 rounded-full border-2 shadow-sm ${
+                              variant.isDefault ? 'border-amber-400 ring-2 ring-amber-300' : 'border-gray-300'
+                            }`}
+                          ></span>
+                          <p className="font-semibold text-sm text-gray-900">{variant.colorName}</p>
+                          {variant.isDefault && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-200 text-amber-800">
+                              ⭐ Default
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleSetDefaultColor(variant.colorName)}
+                          disabled={variant.isDefault}
+                          className={`text-xs px-2 py-1 rounded transition-colors ${
+                            variant.isDefault 
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                              : 'bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-300'
+                          }`}
+                          title={variant.isDefault ? 'This is the default color' : 'Set as default color'}
+                        >
+                          {variant.isDefault ? 'Default' : 'Set as Default'}
+                        </button>
                       </div>
                       <div>
                         <input 

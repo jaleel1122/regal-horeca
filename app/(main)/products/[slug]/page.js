@@ -37,6 +37,15 @@ export default function ProductDetailPage() {
         const data = await response.json();
         if (data.success) {
           setProduct(data.product);
+          
+          // Auto-select the default color variant if exists
+          const productData = data.product;
+          if (productData.colorVariants && productData.colorVariants.length > 0) {
+            // Find the variant with isDefault: true, or fallback to first variant
+            const defaultVariant = productData.colorVariants.find(v => v.isDefault) 
+              || productData.colorVariants[0];
+            setSelectedColor(defaultVariant);
+          }
         }
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -271,22 +280,39 @@ export default function ProductDetailPage() {
             {/* Color Variants */}
             {product.colorVariants && product.colorVariants.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-sm font-semibold mb-3 text-black uppercase tracking-wide">
-                  Color
-                </h3>
-                <div className="flex gap-3">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-black uppercase tracking-wide">
+                    Color
+                  </h3>
+                  {selectedColor && (
+                    <span className="text-sm text-black/60">
+                      {selectedColor.colorName}
+                      {selectedColor.isDefault && (
+                        <span className="ml-1 text-xs text-amber-600">(Default)</span>
+                      )}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-3">
                   {product.colorVariants.map((variant, index) => (
                     <button
                       key={index}
                       onClick={() => handleColorSelect(variant)}
-                      className={`w-12 h-12 rounded-full border-2 transition-all duration-200 ${
+                      className={`relative w-12 h-12 rounded-full border-2 transition-all duration-200 ${
                         selectedColor?.colorName === variant.colorName 
                           ? 'border-accent ring-2 ring-accent ring-offset-2' 
-                          : 'border-black/20 hover:border-black/40'
+                          : variant.isDefault 
+                            ? 'border-amber-400 hover:border-amber-500'
+                            : 'border-black/20 hover:border-black/40'
                       }`}
                       style={{ backgroundColor: variant.colorHex }}
-                      title={variant.colorName}
-                    />
+                      title={`${variant.colorName}${variant.isDefault ? ' (Default)' : ''}`}
+                    >
+                      {/* Default indicator dot */}
+                      {variant.isDefault && selectedColor?.colorName !== variant.colorName && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full border border-white" />
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
