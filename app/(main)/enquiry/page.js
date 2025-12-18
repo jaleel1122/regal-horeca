@@ -267,6 +267,7 @@ function EnquiryForm() {
                     State (Optional)
                   </label>
                   <input
+                    required = {true}
                     type="text"
                     id="state"
                     name="state"

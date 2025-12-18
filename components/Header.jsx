@@ -202,7 +202,7 @@ export default function Header() {
           isHeaderVisible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-        <div className="container mx-auto px-20">
+        <div className="container mx-auto px-4 lg:px-20">
           {/* DESKTOP HEADER */}
           <DesktopHeaderTopRow
             wishlist={wishlist}
@@ -218,11 +218,14 @@ export default function Header() {
             businessTypes={businessTypes}
           />
 
-          {/* MOBILE HEADER (unchanged behavior) */}
+          {/* MOBILE HEADER */}
           <MobileHeaderBar
             isMobileSearchOpen={isMobileSearchOpen}
             setIsMobileSearchOpen={setIsMobileSearchOpen}
             setIsMenuOpen={setIsMenuOpen}
+            wishlist={wishlist}
+            cartTotalItems={getCartTotalItems()}
+            onCartClick={() => setIsCartOpen(true)}
           />
 
           {/* MOBILE SEARCH (unchanged) */}
@@ -700,32 +703,57 @@ function DesktopHeaderTopRow({
 
 /* =========================
    MOBILE HEADER + SEARCH
-   (unchanged behavior)
    ========================= */
 
 function MobileHeaderBar({
   isMobileSearchOpen,
   setIsMobileSearchOpen,
   setIsMenuOpen,
+  wishlist,
+  cartTotalItems,
+  onCartClick,
 }) {
   return (
-    <div className="lg:hidden flex flex-col">
-      <div className="flex justify-between items-center h-16 relative z-50 bg-white">
-        <button onClick={() => setIsMenuOpen(true)}>
-          <MenuIcon className="w-6 h-6" />
+    <div className="lg:hidden flex flex-col px-2">
+      <div className="flex justify-between items-center h-14 relative z-50 bg-white">
+        <button onClick={() => setIsMenuOpen(true)} className="p-1">
+          <MenuIcon className="w-5 h-5" />
         </button>
         <Link
           href="/"
-          className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold tracking-[0.3em] text-black uppercase"
+          className="absolute left-1/2 -translate-x-1/2"
         >
-          <Image src={Logo} alt="Regal" width={100} height={100} />
+          <Image src={Logo} alt="Regal" width={90} height={90} className="h-8 w-auto object-contain" />
         </Link>
-        <div className="flex items-center gap-4">
-          <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className="p-1">
             {isMobileSearchOpen ? (
-              <XIcon className="w-6 h-6" />
+              <XIcon className="w-5 h-5" />
             ) : (
-              <SearchIcon className="w-6 h-6" />
+              <SearchIcon className="w-5 h-5" />
+            )}
+          </button>
+          <Link
+            href="/wishlist"
+            className="relative text-black hover:text-accent p-1"
+          >
+            <HeartIcon className="w-5 h-5" />
+            {wishlist.length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                {wishlist.length}
+              </span>
+            )}
+          </Link>
+          <button
+            onClick={onCartClick}
+            className="relative text-black hover:text-accent p-1"
+            aria-label="Open cart"
+          >
+            <ShoppingCartIcon className="w-5 h-5" />
+            {cartTotalItems > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                {cartTotalItems}
+              </span>
             )}
           </button>
         </div>
@@ -743,12 +771,12 @@ function MobileSearchBar({
   return (
     <div
       className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-        isMobileSearchOpen ? "max-h-16 opacity-100 mb-4" : "max-h-0 opacity-0"
+        isMobileSearchOpen ? "max-h-14 opacity-100 mb-2" : "max-h-0 opacity-0"
       }`}
     >
       <form
         onSubmit={handleSearchSubmit}
-        className="flex items-center border border-black/20 rounded-md px-3 py-2 bg-white mx-1"
+        className="flex items-center border border-black/20 rounded-md px-3 py-1.5 bg-white mx-2"
       >
         <input
           type="text"

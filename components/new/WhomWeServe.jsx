@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
 
 const categories = [
   {
@@ -42,46 +46,63 @@ const categories = [
 
 
 export default function OurCategories() {
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+
+  // Determine if a card's button should be active (accent colored)
+  const isButtonActive = (index) => {
+    if (hoveredIndex !== null) {
+      // If any card is hovered, only that card's button is active
+      return index === hoveredIndex;
+    }
+    // If no card is hovered, first card is active by default
+    return index === 0;
+  };
+
   return (
     <section className="max-w-7xl mx-auto px-4 py-12 md:py-16">
       <h2 className="text-center text-2xl md:text-3xl font-semibold mb-8 md:mb-10">
         Whom We Serve
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        {categories.map((cat) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {categories.map((cat, index) => (
           <Link
             key={cat.slug}
             href={`/whom-we-serve/${cat.slug}`}
-            className="relative group overflow-hidden transform-gpu w-full h-[400px] sm:h-[350px] lg:h-[450px]
-              shadow-sm hover:shadow-xl hover:shadow-black/20
-              transition-all duration-300 ease-out
-            "
+            className="group relative"
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
           >
-            <div className="relative w-full h-full">
+            {/* Card Container */}
+            <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden">
+              {/* Image with grayscale filter */}
               <Image
                 src={cat.image}
                 alt={cat.title}
                 fill
-                sizes="(min-width:1024px) 25vw, (min-width:640px) 50vw, 100vw"
-                className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                sizes="(min-width:1024px) 16vw, (min-width:640px) 33vw, 50vw"
+                className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500 ease-out group-hover:scale-105"
               />
 
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300 ease-out" />
+              {/* Dark overlay */}
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
 
-              {/* Title and button at bottom-left */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-start gap-3">
-                <h3 className="text-white text-xl md:text-2xl font-semibold drop-shadow-lg">
+              {/* Title at bottom left */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <h3 className="text-white text-sm md:text-base font-medium leading-tight">
                   {cat.title}
                 </h3>
-                <button className="px-6 py-2 border border-white text-white text-sm md:text-base font-medium
-                  hover:bg-white hover:text-black transition-all duration-300 ease-out
-                  backdrop-blur-sm bg-white/10
-                ">
-                  Learn More
-                </button>
               </div>
+            </div>
+
+            {/* Arrow Button - positioned at bottom right, overlapping the card */}
+            <div 
+              className={`absolute -bottom-3 -right-1 w-10 h-10 rounded-full flex items-center justify-center 
+                transition-all duration-300 shadow-lg text-white
+                ${hoveredIndex === index ? 'scale-110' : ''}
+                ${isButtonActive(index) ? 'bg-accent' : 'bg-[#3D2314]'}`}
+            >
+              <ArrowUpRight size={18} strokeWidth={2.5} />
             </div>
           </Link>
         ))}
