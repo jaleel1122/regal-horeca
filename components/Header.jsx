@@ -534,44 +534,62 @@ function DesktopHeaderTopRow({
             {/* Only render content if we actually have an active department */}
             {activeDept && hasActiveChildren && (
               <div className="w-full px-4 md:px-6 py-6 md:py-8 transition-opacity duration-700 md:duration-1000 ease-out">
-                <div className="flex flex-col lg:flex-row gap-8 items-start">
-                  {/* Categories Columns */}
-                  <div className="flex-1 flex flex-col md:flex-row gap-6 md:gap-8">
-                    {activeDept.children.slice(0, 6).map((childCat) => (
-                      <div
-                        key={childCat._id || childCat.id}
-                        className="flex-1 min-w-0 transition-transform duration-500 ease-out"
-                      >
-                        <Link
-                          href={`/catalog?category=${childCat.slug}`}
-                          className="block text-sm font-semibold uppercase tracking-wide text-black border-b border-black/10 pb-2 mb-3 hover:text-accent transition-colors duration-500 ease-out"
+                <div className="flex gap-6 items-start">
+                  {/* Categories Section - Scrollable with Grid Layout */}
+                  <div className="flex-1 max-h-[380px] overflow-y-auto pr-4 categories-scrollbar">
+                    <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-x-8 gap-y-6">
+                      {/* Show ALL categories */}
+                      {activeDept.children.map((childCat) => (
+                        <div
+                          key={childCat._id || childCat.id}
+                          className="min-w-[120px] max-w-[160px] transition-transform duration-500 ease-out"
                         >
-                          {childCat.name}
-                        </Link>
-  
-                        {childCat.children && childCat.children.length > 0 && (
-                          <ul className="space-y-2.5 mt-2">
-                            {childCat.children.map((subcat) => (
-                              <li
-                                key={subcat._id || subcat.id}
-                                className="transition-transform duration-400 ease-out hover:translate-x-1"
-                              >
-                                <Link
-                                  href={`/catalog?category=${subcat.slug}`}
-                                  className="text-sm text-black/70 hover:text-accent transition-colors duration-400 ease-out"
+                          {/* Category Name - consistent size, allows 2-line wrap */}
+                          <Link
+                            href={`/catalog?category=${childCat.slug}`}
+                            className="block text-xs font-semibold uppercase tracking-wide text-black border-b border-black/10 pb-2 mb-3 hover:text-accent transition-colors duration-500 ease-out line-clamp-2 min-h-[2.5rem]"
+                            title={childCat.name}
+                          >
+                            {childCat.name}
+                          </Link>
+
+                          {/* Subcategories */}
+                          {childCat.children && childCat.children.length > 0 && (
+                            <ul className="space-y-2">
+                              {childCat.children.slice(0, 5).map((subcat) => (
+                                <li
+                                  key={subcat._id || subcat.id}
+                                  className="transition-transform duration-400 ease-out hover:translate-x-1"
                                 >
-                                  {subcat.name}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ))}
+                                  <Link
+                                    href={`/catalog?category=${subcat.slug}`}
+                                    className="text-sm text-black/70 hover:text-accent transition-colors duration-400 ease-out line-clamp-1"
+                                    title={subcat.name}
+                                  >
+                                    {subcat.name}
+                                  </Link>
+                                </li>
+                              ))}
+                              {/* Show "more" link if > 5 subcategories */}
+                              {childCat.children.length > 5 && (
+                                <li>
+                                  <Link
+                                    href={`/catalog?category=${childCat.slug}`}
+                                    className="text-xs text-accent font-medium hover:underline"
+                                  >
+                                    +{childCat.children.length - 5} more
+                                  </Link>
+                                </li>
+                              )}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-  
-                  {/* Featured Products Section */}
-                  <div className="w-full lg:w-[32%] border-t lg:border-t-0 lg:border-l border-black/10 pt-6 lg:pt-0 lg:pl-8 transition-opacity duration-700 md:duration-1000 ease-out">
+
+                  {/* Featured Products Section - Fixed width, doesn't scroll with categories */}
+                  <div className="w-[200px] flex-shrink-0 border-l border-black/10 pl-6 transition-opacity duration-700 md:duration-1000 ease-out">
                     <FeaturedProductsSection
                       department={activeDept}
                       products={products}
@@ -594,8 +612,6 @@ function DesktopHeaderTopRow({
     // Get products for this department (featured first, then by category)
     const featuredProducts = useMemo(() => {
       if (!products || products.length === 0) return [];
-      
-      const deptId = department._id || department.id;
       
       // Collect all category IDs in this department tree
       const getAllCategoryIds = (cat) => {
@@ -621,6 +637,7 @@ function DesktopHeaderTopRow({
       const featured = deptProducts.filter(p => p.featured);
       const others = deptProducts.filter(p => !p.featured);
       
+      // Show only 1 featured product to save space
       return [...featured, ...others].slice(0, 1);
     }, [department, products]);
   
@@ -639,60 +656,58 @@ function DesktopHeaderTopRow({
     };
   
     return (
-      <div className="w-full lg:w-auto lg:min-w-[260px] lg:max-w-[320px]">
+      <div>
         <h3 className="text-sm font-semibold uppercase tracking-wide text-black mb-4">
           Featured
         </h3>
 
-        {/* Use a responsive grid so cards don't force horizontal overflow */}
-        <div className="grid grid-cols-2 gap-3 lg:gap-4 w-full items-start">
-          {featuredProducts.map((product) => {
-            const isOnSale = product.mrp && product.price && product.mrp > product.price;
-            const heroImage = product.heroImage || product.image || (product.images && product.images[0]) || '/placeholder-product.jpg';
-            
-            return (
-              <Link
-                key={product._id || product.id}
-                href={`/products/${product.slug}`}
-                className="group min-w-0 overflow-hidden"
-              >
-                <div className="relative mb-2">
-                  {/* Sale Badge */}
-                  {isOnSale && (
-                    <div className="absolute top-2 left-2 z-10 bg-accent text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
-                      Sale
-                    </div>
-                  )}
-                  {/* Product Image */}
-                  <div className="aspect-square bg-white border border-black/10 rounded overflow-hidden relative">
-                    <Image
-                      src={heroImage}
-                      alt={product.title || product.name}
-                      fill
-                      sizes="(max-width: 640px) 140px, (max-width: 1024px) 160px, 180px"
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+        {/* Single featured product */}
+        {featuredProducts.map((product) => {
+          const isOnSale = product.mrp && product.price && product.mrp > product.price;
+          const heroImage = product.heroImage || product.image || (product.images && product.images[0]) || '/placeholder-product.jpg';
+          
+          return (
+            <Link
+              key={product._id || product.id}
+              href={`/products/${product.slug}`}
+              className="group block"
+            >
+              <div className="relative mb-2">
+                {/* Sale Badge */}
+                {isOnSale && (
+                  <div className="absolute top-2 left-2 z-10 bg-accent text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+                    Sale
                   </div>
+                )}
+                {/* Product Image */}
+                <div className="aspect-square bg-white border border-black/10 rounded overflow-hidden relative">
+                  <Image
+                    src={heroImage}
+                    alt={product.title || product.name}
+                    fill
+                    sizes="180px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
-                {/* Product Name */}
-                <h4 className="text-xs font-medium text-black mb-1.5 line-clamp-2 group-hover:text-accent transition-colors leading-snug min-w-0">
-                  {product.title || product.name}
-                </h4>
-                {/* Price */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs sm:text-sm font-semibold text-accent">
-                    {formatPrice(product.price)}
+              </div>
+              {/* Product Name */}
+              <h4 className="text-xs font-medium text-black mb-1.5 line-clamp-2 group-hover:text-accent transition-colors leading-snug">
+                {product.title || product.name}
+              </h4>
+              {/* Price */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-accent">
+                  {formatPrice(product.price)}
+                </span>
+                {isOnSale && (
+                  <span className="text-xs text-black/50 line-through">
+                    {formatPrice(product.mrp)}
                   </span>
-                  {isOnSale && (
-                    <span className="text-[10px] sm:text-xs text-black/50 line-through">
-                      {formatPrice(product.mrp)}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
     );
   }
