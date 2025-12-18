@@ -38,7 +38,6 @@ function CatalogPageContent() {
     price: true,
     color: true,
     brand: true,
-    status: true,
   });
 
   // Get context filters from URL
@@ -47,13 +46,13 @@ function CatalogPageContent() {
   const searchQuery = searchParams.get('search') || '';
 
   // Use custom filter hook
+  // NOTE: specs removed - they are for product detail page only, not sidebar filtering
+  // NOTE: status removed - not needed in sidebar
   const {
     priceRange,
     selectedColors,
     selectedBrands,
-    selectedStatus,
     selectedFilters,
-    selectedSpecs,
     sortBy,
     contextFilteredProducts,
     filteredProducts,
@@ -61,9 +60,7 @@ function CatalogPageContent() {
     handlePriceMaxChange,
     handleColorToggle,
     handleBrandToggle,
-    handleStatusToggle,
     handleFilterToggle,
-    handleSpecToggle,
     handleSortChange,
     clearAllFilters,
     hasActiveFilters,
@@ -88,8 +85,8 @@ function CatalogPageContent() {
     colors: [],
     brands: [],
     filters: {},
-    specs: {},
-    statuses: [],
+    // specs removed - specifications are for product detail page only, not sidebar
+    // statuses removed - not needed in sidebar
     priceRange: { min: 0, max: 0 },
     totalProducts: 0,
   };
@@ -137,7 +134,7 @@ function CatalogPageContent() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategorySlug, selectedBusinessSlug, searchQuery, selectedColors, selectedBrands, selectedStatus, selectedFilters, selectedSpecs, priceRange.minValue, priceRange.maxValue]);
+  }, [selectedCategorySlug, selectedBusinessSlug, searchQuery, selectedColors, selectedBrands, selectedFilters, priceRange.minValue, priceRange.maxValue]);
 
   // Close mobile filter on route change
   useEffect(() => {
@@ -158,19 +155,8 @@ function CatalogPageContent() {
         return newSections;
       });
     }
-    if (facets.specs && Object.keys(facets.specs).length > 0) {
-      setOpenFilterSections(prev => {
-        const newSections = { ...prev };
-        Object.keys(facets.specs).forEach(key => {
-          const sectionId = key.toLowerCase().replace(/\s+/g, '-');
-          if (newSections[sectionId] === undefined) {
-            newSections[sectionId] = true;
-          }
-        });
-        return newSections;
-      });
-    }
-  }, [facets.filters, facets.specs]);
+    // NOTE: specs removed - they are for product detail page only
+  }, [facets.filters]);
 
   const toggleFilterSection = (section) => {
     setOpenFilterSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -189,9 +175,7 @@ function CatalogPageContent() {
     if (filterType === 'brand') {
       return contextFilteredProducts.filter(p => p.brand?.trim() === value).length;
     }
-    if (filterType === 'status') {
-      return contextFilteredProducts.filter(p => p.status === value).length;
-    }
+    // Status removed - not in sidebar
     return 0;
   }, [contextFilteredProducts]);
 
@@ -251,12 +235,7 @@ function CatalogPageContent() {
       });
     });
 
-    selectedStatus.forEach(status => {
-      chips.push({
-        label: `Status: ${status}`,
-        onRemove: () => handleStatusToggle(status)
-      });
-    });
+    // Status chips removed - not in sidebar
 
     Object.entries(selectedFilters).forEach(([key, values]) => {
       values.forEach(value => {
@@ -267,14 +246,7 @@ function CatalogPageContent() {
       });
     });
 
-    Object.entries(selectedSpecs).forEach(([key, values]) => {
-      values.forEach(value => {
-        chips.push({
-          label: `${key}: ${value}`,
-          onRemove: () => handleSpecToggle(key, value)
-        });
-      });
-    });
+    // NOTE: specs removed from chips - they are for product detail page only
 
     if (chips.length === 0) return null;
 
@@ -390,39 +362,7 @@ function CatalogPageContent() {
         </div>
       </FilterSection>
 
-      {/* Status Filter */}
-      {facets.statuses && facets.statuses.length > 0 && (
-        <FilterSection title="Availability" id="status" count={facets.statuses.length}>
-          <div className="space-y-2">
-            {facets.statuses.map(status => {
-              const count = getFilterCount('status', status);
-              const isSelected = selectedStatus.includes(status);
-              const isDisabled = count === 0 && !isSelected;
-              
-              return (
-                <label 
-                  key={status} 
-                  className={`flex items-center space-x-2 cursor-pointer ${
-                    isDisabled ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  <input 
-                    type="checkbox" 
-                    checked={isSelected}
-                    onChange={() => !isDisabled && handleStatusToggle(status)}
-                    disabled={isDisabled}
-                    className="h-4 w-4 rounded border-black/20 text-accent focus:ring-accent disabled:cursor-not-allowed" 
-                  />
-                  <span className="text-sm text-black/70">
-                    {status}
-                    {count > 0 && <span className="ml-1 text-black/40">({count})</span>}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </FilterSection>
-      )}
+      {/* Status Filter removed - not needed in sidebar */}
 
       {/* Brand Filter */}
       {facets.brands && facets.brands.length > 0 && (
@@ -530,43 +470,8 @@ function CatalogPageContent() {
         </FilterSection>
       ))}
 
-      {/* Specifications */}
-      {facets.specs && Object.entries(facets.specs).map(([key, values]) => (
-        <FilterSection 
-          title={key} 
-          id={key.toLowerCase().replace(/\s+/g, '-')} 
-          key={key}
-          count={values.length}
-        >
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {values.map(({ value, count: specCount }) => {
-              const isSelected = selectedSpecs[key]?.includes(value) || false;
-              const isDisabled = specCount === 0 && !isSelected;
-              
-              return (
-                <label 
-                  key={value} 
-                  className={`flex items-center space-x-2 cursor-pointer ${
-                    isDisabled ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  <input 
-                    type="checkbox" 
-                    checked={isSelected}
-                    onChange={() => !isDisabled && handleSpecToggle(key, value)}
-                    disabled={isDisabled}
-                    className="h-4 w-4 rounded border-black/20 text-accent focus:ring-accent disabled:cursor-not-allowed" 
-                  />
-                  <span className="text-sm text-black/70">
-                    {value}
-                    {specCount > 0 && <span className="ml-1 text-black/40">({specCount})</span>}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </FilterSection>
-      ))}
+      {/* NOTE: Specifications removed from sidebar - they are for product detail page only */}
+      {/* Golden Rule: filterable = filters (admin form), descriptive = specifications */}
     </aside>
   );
 
@@ -618,10 +523,8 @@ function CatalogPageContent() {
               {hasActiveFilters && (
                 <span className="ml-1 px-2 py-0.5 text-xs bg-accent text-white rounded-full">
                   {Object.keys(selectedFilters).length + 
-                   Object.keys(selectedSpecs).length + 
                    selectedColors.length + 
                    selectedBrands.length + 
-                   selectedStatus.length + 
                    (priceRange.minValue || priceRange.maxValue ? 1 : 0)}
                 </span>
               )}
