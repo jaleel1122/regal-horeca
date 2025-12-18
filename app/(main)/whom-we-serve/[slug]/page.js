@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from "next/image";
 import Link from "next/link";
@@ -249,7 +249,10 @@ export default function CategoryPage() {
   const router = useRouter();
   const slug = params?.slug || '';
   const category = categoryData[slug] || categoryData.restaurants;
-  const { cart, products, categories: allCategories } = useAppContext();
+  const { cart, products, categories: allCategories, businessTypes } = useAppContext();
+
+  // Get current category name from the page
+  const currentCategoryName = category.title.replace('Shapes for ', '');
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -258,12 +261,32 @@ export default function CategoryPage() {
     companyName: '',
     state: '',
     query: '',
-    countryCode: '+91',
+    categories: [currentCategoryName],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
   const [isCartDropdownOpen, setIsCartDropdownOpen] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [includeCart, setIncludeCart] = useState(true);
+  const categoryDropdownRef = useRef(null);
+
+  // Close category dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+
+    if (isCategoryDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCategoryDropdownOpen]);
 
   // Get departments (top-level categories) - limit to 4 for display
   const departments = useMemo(() => {
@@ -297,6 +320,23 @@ export default function CategoryPage() {
     }));
   };
 
+  const handleCategoryToggle = (categoryName) => {
+    setFormData(prev => {
+      const currentCategories = prev.categories || [];
+      if (currentCategories.includes(categoryName)) {
+        return {
+          ...prev,
+          categories: currentCategories.filter(cat => cat !== categoryName)
+        };
+      } else {
+        return {
+          ...prev,
+          categories: [...currentCategories, categoryName]
+        };
+      }
+    });
+  };
+
   const scrollToForm = () => {
     const formElement = document.getElementById('contact');
     if (formElement) {
@@ -307,7 +347,7 @@ export default function CategoryPage() {
   const submitEnquiry = async (e) => {
     e.preventDefault();
     
-    if (!formData.fullName || !formData.email || !formData.query) {
+    if (!formData.fullName || !formData.email || !formData.phone || !formData.state) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -315,15 +355,20 @@ export default function CategoryPage() {
     setIsSubmitting(true);
 
     try {
+      // Combine selected categories with the current page category
+      const allCategories = formData.categories.length > 0 
+        ? formData.categories 
+        : [category.title.replace('Shapes for ', '')];
+
       const enquiryData = {
         name: formData.fullName,
         email: formData.email,
-        phone: formData.phone ? `${formData.countryCode}${formData.phone}` : '',
+        phone: formData.phone,
         company: formData.companyName,
         state: formData.state,
         message: formData.query,
-        categories: [category.title.replace('Shapes for ', '')],
-        cartItems: cartItems.length > 0 ? cartItems : [],
+        categories: allCategories,
+        cartItems: includeCart && cartItems.length > 0 ? cartItems : [],
       };
 
       const response = await fetch('/api/enquiries', {
@@ -343,18 +388,16 @@ export default function CategoryPage() {
       let whatsappMessage = 'Hello! I would like to make an enquiry:\n\n';
       whatsappMessage += `Name: ${formData.fullName}\n`;
       whatsappMessage += `Email: ${formData.email}\n`;
-      if (formData.phone) {
-        whatsappMessage += `Phone: ${formData.countryCode}${formData.phone}\n`;
-      }
+      whatsappMessage += `Phone: ${formData.phone}\n`;
       if (formData.companyName) {
         whatsappMessage += `Company: ${formData.companyName}\n`;
       }
-      if (formData.state) {
-        whatsappMessage += `State: ${formData.state}\n`;
+      whatsappMessage += `State: ${formData.state}\n`;
+      if (allCategories.length > 0) {
+        whatsappMessage += `Categories: ${allCategories.join(', ')}\n`;
       }
-      whatsappMessage += `Categories: ${category.title.replace('Shapes for ', '')}\n`;
       
-      if (cartItems.length > 0) {
+      if (includeCart && cartItems.length > 0) {
         whatsappMessage += `\n📦 Products I'm interested in:\n`;
         cartItems.forEach((item, index) => {
           whatsappMessage += `${index + 1}. ${item.productName} (Quantity: ${item.quantity})\n`;
@@ -363,7 +406,7 @@ export default function CategoryPage() {
       }
       
       if (formData.query) {
-        whatsappMessage += `\nQuery: ${formData.query}\n`;
+        whatsappMessage += `\nMessage: ${formData.query}\n`;
       }
       
       const whatsappUrl = getWhatsAppBusinessLink(whatsappMessage);
@@ -376,7 +419,7 @@ export default function CategoryPage() {
         companyName: '',
         state: '',
         query: '',
-        countryCode: '+91',
+        categories: [currentCategoryName],
       });
       
       toast.success('Enquiry submitted successfully! Opening WhatsApp...');
@@ -703,149 +746,243 @@ export default function CategoryPage() {
       )}
 
       {/* Contact Form Section */}
-      <section id="contact" className="py-16 md:py-24 lg:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl lg:text-[2.5rem] font-bold text-black tracking-tight mb-4">
-                Get in Touch
-              </h2>
-              <p className="text-base md:text-lg text-black/70">
-                Have questions about our products? We'd love to hear from you.
-              </p>
-            </div>
-            <form onSubmit={submitEnquiry} className="space-y-6">
+      <section id="contact" className="py-16 md:py-24 lg:py-32 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 lg:px-12">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl lg:text-[2.5rem] font-bold text-black tracking-tight mb-4">
+              Get in Touch
+            </h2>
+            <p className="text-base md:text-lg text-black/70">
+              Have questions about our products? We'd love to hear from you.
+            </p>
+          </div>
+          
+          <form onSubmit={submitEnquiry} className="bg-white rounded-lg p-6 md:p-8 shadow-sm">
+            <div className="space-y-6">
+              {/* Two Column Grid Layout */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label htmlFor="fullName" className="text-sm font-semibold text-black">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="fullName"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    required
-                    className="flex h-9 w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="companyName" className="text-sm font-semibold text-black">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    id="companyName"
-                    name="companyName"
-                    value={formData.companyName}
-                    onChange={handleChange}
-                    className="flex h-9 w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Your Company"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="state" className="text-sm font-semibold text-black">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    id="state"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    className="flex h-9 w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Your State"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-semibold text-black">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="flex h-9 w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="john@company.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="phone" className="text-sm font-semibold text-black">
-                    Phone
-                  </label>
-                  <div className="flex gap-2">
-                    <select
-                      name="countryCode"
-                      value={formData.countryCode}
+                {/* Column 1 - Contact Details */}
+                <div className="space-y-6">
+                  {/* Name */}
+                  <div>
+                    <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+                      Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="fullName"
+                      name="fullName"
+                      value={formData.fullName}
                       onChange={handleChange}
-                      className="flex h-9 items-center justify-between rounded-md border border-black/20 bg-white px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-[100px]"
-                    >
-                      <option value="+1">+1 (US)</option>
-                      <option value="+44">+44 (UK)</option>
-                      <option value="+91">+91 (IN)</option>
-                      <option value="+61">+61 (AU)</option>
-                      <option value="+81">+81 (JP)</option>
-                      <option value="+33">+33 (FR)</option>
-                      <option value="+49">+49 (DE)</option>
-                      <option value="+86">+86 (CN)</option>
-                    </select>
+                      required
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition hover:border-gray-400"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition hover:border-gray-400"
+                      placeholder="Enter your email address"
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="tel"
                       id="phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      className="flex h-9 w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex-1"
-                      placeholder="9876543210"
+                      required
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition hover:border-gray-400"
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                </div>
+
+                {/* Column 2 - Additional Details */}
+                <div className="space-y-6">
+                  {/* Company & State - Side by Side */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Company */}
+                    <div>
+                      <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-2">
+                        Company (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        id="companyName"
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition hover:border-gray-400"
+                        placeholder="Company name"
+                      />
+                    </div>
+
+                    {/* State */}
+                    <div>
+                      <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                        State <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="state"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition hover:border-gray-400"
+                        placeholder="Your state"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Categories Multi-Select */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Categories (Optional)
+                    </label>
+                    <div className="relative" ref={categoryDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between hover:border-gray-400 transition-colors focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
+                      >
+                        <span className="text-sm text-gray-700">
+                          {formData.categories.length > 0 
+                            ? `${formData.categories.length} categor${formData.categories.length === 1 ? 'y' : 'ies'} selected`
+                            : 'Select categories'
+                          }
+                        </span>
+                        <ChevronDownIcon 
+                          className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${
+                            isCategoryDropdownOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
+                      
+                      {/* Dropdown */}
+                      {isCategoryDropdownOpen && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          <div className="p-2 space-y-1">
+                            {businessTypes && businessTypes.length > 0 ? (
+                              businessTypes.map((businessType) => {
+                                const businessTypeName = businessType.name;
+                                const isSelected = formData.categories.includes(businessTypeName);
+                                return (
+                                  <label
+                                    key={businessType._id || businessType.id || businessTypeName}
+                                    className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => handleCategoryToggle(businessTypeName)}
+                                      className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent focus:ring-2 transition-all hover:scale-110"
+                                    />
+                                    <span className="text-sm text-gray-700">{businessTypeName}</span>
+                                  </label>
+                                );
+                              })
+                            ) : (
+                              <p className="text-sm text-gray-500 p-2">No categories available</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Selected Categories Display */}
+                    {formData.categories.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {formData.categories.map((catName, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-accent/10 text-accent text-xs rounded-full"
+                          >
+                            {catName}
+                            <button
+                              type="button"
+                              onClick={() => handleCategoryToggle(catName)}
+                              className="hover:text-accent/80 transition-colors"
+                              aria-label={`Remove ${catName}`}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label htmlFor="query" className="block text-sm font-medium text-gray-700 mb-2">
+                      Message (Optional)
+                    </label>
+                    <textarea
+                      id="query"
+                      name="query"
+                      value={formData.query}
+                      onChange={handleChange}
+                      rows={formData.categories.length > 0 ? 3 : 4}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition resize-none hover:border-gray-400"
+                      placeholder="Tell us about your requirements..."
                     />
                   </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="query" className="text-sm font-semibold text-black">
-                  Your Query *
-                </label>
-                <textarea
-                  id="query"
-                  name="query"
-                  value={formData.query}
-                  onChange={handleChange}
-                  required
-                  rows={5}
-                  className="flex w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[120px] resize-none"
-                  placeholder="Tell us about your requirements..."
-                />
-              </div>
 
-              {/* Cart Items Dropdown */}
+              {/* Cart Items Dropdown - Full Width */}
               {cartItems.length > 0 && (
-                <div className="bg-accent/10 border border-accent/20 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
                   <button
                     type="button"
                     onClick={() => setIsCartDropdownOpen(!isCartDropdownOpen)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-accent/20 transition-colors duration-200 group"
+                    className="w-full flex items-center justify-between p-3 sm:p-4 hover:bg-blue-100 transition-colors duration-200 group"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">📦</span>
-                      <h3 className="text-sm font-semibold text-black">
-                        Products in Cart ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} items)
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="text-base sm:text-lg">📦</span>
+                      <h3 className="text-xs sm:text-sm font-semibold text-gray-900">
+                        Cart Items ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} items)
                       </h3>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-accent font-medium px-2 py-1 bg-accent/20 rounded">
-                        ✓ Will be included
-                      </span>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <label 
+                        className="flex items-center gap-1.5 sm:gap-2 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={includeCart}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setIncludeCart(e.target.checked);
+                          }}
+                          className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent focus:ring-2 transition-all duration-200 hover:scale-110"
+                        />
+                        <span className="text-xs text-gray-700 font-medium">Include</span>
+                      </label>
                       <ChevronDownIcon 
-                        className={`w-5 h-5 text-black/60 transition-transform duration-300 ease-in-out ${
+                        className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-600 transition-transform duration-300 ease-in-out ${
                           isCartDropdownOpen ? 'rotate-180' : ''
-                        } group-hover:text-black`}
+                        } group-hover:text-gray-900`}
                       />
                     </div>
                   </button>
@@ -855,46 +992,55 @@ export default function CategoryPage() {
                       isCartDropdownOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
                     }`}
                   >
-                    <div className="px-4 pb-4 pt-2 border-t border-accent/20">
-                      <div className="space-y-2 mt-2">
-                        {cartItems.map((item, index) => (
-                          <button
-                            type="button"
-                            key={index} 
-                            onClick={() => {
-                              window.dispatchEvent(new CustomEvent('openCartDrawer'));
-                            }}
-                            className="w-full text-left text-sm text-black flex justify-between items-center p-2 rounded-md bg-white/60 hover:bg-white transition-all duration-200 hover:shadow-sm hover:translate-x-1 active:scale-[0.98] cursor-pointer group"
-                          >
-                            <span className="font-medium group-hover:text-accent transition-colors truncate pr-2">{item.productName}</span>
-                            <span className="font-semibold text-accent px-2 py-0.5 bg-accent/10 rounded-full group-hover:bg-accent/20 transition-colors flex-shrink-0">
-                              Qty: {item.quantity}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-xs text-accent mt-3 flex items-center gap-1 font-medium">
-                        <span>✓</span>
-                        These products will be included in your enquiry and WhatsApp message
-                      </p>
+                    <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-2 border-t border-blue-200">
+                      {includeCart ? (
+                        <>
+                          <div className="space-y-2 sm:space-y-2.5 mt-2">
+                            {cartItems.map((item, index) => (
+                              <button
+                                type="button"
+                                key={index} 
+                                onClick={() => {
+                                  window.dispatchEvent(new CustomEvent('openCartDrawer'));
+                                }}
+                                className="w-full text-left text-xs sm:text-sm text-gray-700 flex justify-between items-center p-2 rounded-md bg-white/60 hover:bg-white transition-all duration-200 hover:shadow-sm hover:translate-x-1 active:scale-[0.98] cursor-pointer group"
+                              >
+                                <span className="font-medium group-hover:text-accent transition-colors truncate pr-2">{item.productName}</span>
+                                <span className="font-semibold text-accent px-2 py-0.5 bg-accent/10 rounded-full group-hover:bg-accent/20 transition-colors flex-shrink-0">
+                                  Qty: {item.quantity}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-xs text-green-700 mt-3 flex items-center gap-1 font-medium">
+                            <span>✓</span>
+                            These items will be included in your enquiry
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-gray-600 mt-2 flex items-center gap-1">
+                          <span>ℹ</span>
+                          Cart items will not be included in your enquiry
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover-elevate active-elevate-2 bg-accent text-white border border-accent min-h-9 px-4 py-2 w-full font-semibold gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                  <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path>
-                  <path d="m21.854 2.147-10.94 10.939"></path>
-                </svg>
-                {isSubmitting ? 'Sending...' : 'Send Enquiry'}
-              </button>
-            </form>
-          </div>
+              {/* Submit Button */}
+              <div className="flex justify-center">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto min-w-[200px] bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg active:scale-[0.98]"
+                >
+                  <WhatsAppIcon className="w-5 h-5" />
+                  <span>{isSubmitting ? 'Submitting...' : 'Submit Enquiry'}</span>
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </section>
     </div>
