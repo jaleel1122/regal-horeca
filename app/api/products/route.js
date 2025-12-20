@@ -30,7 +30,19 @@ export const revalidate = 0;
  */
 export async function GET(request) {
   try {
-    await connectToDatabase();
+    // Connect to database with better error handling
+    try {
+      await connectToDatabase();
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return NextResponse.json(
+        { 
+          error: 'Database connection failed', 
+          details: process.env.NODE_ENV === 'development' ? dbError.message : 'Unable to connect to database. Please check environment variables.' 
+        },
+        { status: 500 }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const categorySlug = searchParams.get('category');
@@ -47,14 +59,19 @@ export async function GET(request) {
 
     // Category filter - use cached category tree
     if (categorySlug) {
-      const categoryIds = await getCategoryIdsWithChildren(categorySlug);
-      if (categoryIds.length > 0) {
-        andConditions.push({
-          $or: [
-            { categoryId: { $in: categoryIds } },
-            { categoryIds: { $in: categoryIds } }
-          ]
-        });
+      try {
+        const categoryIds = await getCategoryIdsWithChildren(categorySlug);
+        if (categoryIds.length > 0) {
+          andConditions.push({
+            $or: [
+              { categoryId: { $in: categoryIds } },
+              { categoryIds: { $in: categoryIds } }
+            ]
+          });
+        }
+      } catch (categoryError) {
+        console.error('Error processing category filter:', categoryError);
+        // Continue without category filter if there's an error
       }
     }
 
@@ -149,8 +166,16 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error('Error fetching products:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
+    
+    // Provide more detailed error information in development
+    const errorDetails = process.env.NODE_ENV === 'development' 
+      ? { message: error.message, stack: error.stack, name: error.name }
+      : { message: 'An error occurred while fetching products' };
+    
     return NextResponse.json(
-      { error: 'Failed to fetch products', details: error.message },
+      { error: 'Failed to fetch products', details: errorDetails },
       { status: 500 }
     );
   }
